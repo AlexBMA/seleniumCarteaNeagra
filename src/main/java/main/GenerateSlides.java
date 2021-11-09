@@ -41,6 +41,26 @@ public class GenerateSlides {
 
         System.out.println("BEGIN");
 
+        String txtFile ="D:\\Proiecte\\carteaNeagraSel\\TestNewR.txt";
+
+        String text = new String(Files.readAllBytes(Paths.get(txtFile)));
+        System.out.println(text);
+
+        String[] splitText = text.split("[0-9][.]+|[0-9]{1,}|(\r\n:)");
+
+        List<String> updateSplit = new ArrayList<>();
+
+        updateTextForPpt(text, splitText, updateSplit);
+        createNewPpt(updateSplit,OUTPUT_FOLDER + "TestNewRegex.ppt");
+
+        System.out.println("Done");
+
+    }
+
+    public static void main222() throws IOException {
+
+        System.out.println("BEGIN");
+
         Stream<Path> paths = Files.walk(Paths.get(INPUT_FOLDER));
         List<Path> fileNames = paths.filter(item->item.toString().endsWith("txt")).collect(Collectors.toList());
 
@@ -56,6 +76,7 @@ public class GenerateSlides {
 
             String[] splitText = text.split("[0-9][.]+|[0-9]{2,}|(Cor:)");
 
+
             List<String> updateSplit = new ArrayList<>();
 
             updateTextForPpt(text, splitText, updateSplit);
@@ -68,14 +89,24 @@ public class GenerateSlides {
     }
 
     private static void updateTextForPpt(String text, String[] splitText, List<String> updateSplit) {
-        if(text.contains("Cor:")){
-            String corRefren = splitText[3].trim();
+        if(text.contains("Cor:")||text.contains("R:")){
+            // needs more work for R: case
+
+            String refren = splitText[3].trim();
+
+            for(String t: splitText){
+                if(t.contains("Cor:")||t.contains("R:")){
+                    refren = t.trim();
+                }
+            }
+            
+           // corRefren = splitText[3].trim();
 
             for(String t: splitText){
                 String item = t.trim();
-                if(!item.isBlank() && !item.equals(corRefren)){
+                if(!item.isBlank() && !item.equals(refren)){
                     updateSplit.add(item);
-                    updateSplit.add(corRefren);
+                    updateSplit.add(refren);
                 }
             }
         } else {
