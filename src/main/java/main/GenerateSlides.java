@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -22,10 +23,10 @@ public class GenerateSlides {
     public static final String CALIBRI = "Calibri";
     public static final long EMU = 914400;
     public static final long INCH_PT = 72;
-    public static final double FONT_SIZE = 90;
+    public static final double FONT_SIZE = 80;
 
-    public static final String OUTPUT_FOLDER = "..\\ppt_files\\";
-    public static final String INPUT_FOLDER = "..\\txt_files\\";
+    public static final String OUTPUT_FOLDER = "ppt_files/";
+    public static final String INPUT_FOLDER = "txt_files/";
 
     /*
      * Title Slide
@@ -48,22 +49,23 @@ public class GenerateSlides {
         List<Path> fileNames = paths.filter(item -> item.toString().endsWith("txt")).collect(Collectors.toList());
 
         for (Path item : fileNames) {
-            int position = item.toString().lastIndexOf("\\");
+            int position = item.toString().lastIndexOf("/");
             // System.out.println(position);
-            String pptTitle = item.toString().substring(position + 1).replace("txt", "ppt");
+            String pptTitle = item.toString().substring(position + 1).replace("txt", "pptx");
             // System.out.println(pptTitle);
 
             System.out.println("reading txt file");
-            String text = new String(Files.readAllBytes(Paths.get(item.toString())), StandardCharsets.UTF_8).replace("\r", "");
+            String text = Files.readString(Paths.get(item.toString())).replace("\r", "");
             // System.out.println(text);
 
             String[] splitText = text.split("(\r\n\r\n[\r\n]*)|(\n\n[\n]*)");
             System.out.println("splitting the text by verses");
-            List<String> updateSplit = splitTextByVerses(text);
+            List<String> updateSplit = splitTextByVerses(text,false);
 
             // updateTextForPpt(text, splitText, updateSplit);
             System.out.println("creating the ppt file");
-            createNewPpt(updateSplit, OUTPUT_FOLDER + pptTitle);
+            System.out.println(OUTPUT_FOLDER);
+            createNewPpt(updateSplit, OUTPUT_FOLDER + pptTitle, false);
 
             System.out.println("Done");
 
@@ -71,9 +73,8 @@ public class GenerateSlides {
         paths.close();
     }
 
-    private static List<String> splitTextByVerses(String text) {
+    private static List<String> splitTextByVerses(String text, boolean lowerThird) {
         String[] splitText = text.split("(\n\n[\n]*)");
-        List<String> listOfVerses = new ArrayList<>();
         int firstIndexChorus = -1, lastIndexChorus = -1;
         boolean multipleChorus = false;
 
@@ -101,8 +102,7 @@ public class GenerateSlides {
             lastIndexChorus = splitText.length - 1;
         }
 
-        for (int i = 0; i <= lastIndexChorus; i++)
-            listOfVerses.add(splitText[i]);
+        List<String> listOfVerses = new ArrayList<>(Arrays.asList(splitText).subList(0, lastIndexChorus + 1));
 
         for (int i = lastIndexChorus + 1; i < splitText.length; i++) {
             listOfVerses.add(splitText[i]);
@@ -110,9 +110,32 @@ public class GenerateSlides {
             // if there is only one chorus, add it after each verse
             // firstIndexChorus will act also as an indicator for the periodicity of inserting the chorus
             if (!multipleChorus && (i - lastIndexChorus) % firstIndexChorus == 0) {
-                for (int j = firstIndexChorus; j <= lastIndexChorus; j++)
-                    listOfVerses.add(splitText[j]);
+                listOfVerses.addAll(Arrays.asList(splitText).subList(firstIndexChorus, lastIndexChorus + 1));
             }
+        }
+
+        if (lowerThird) {
+            List<String> listOfSubtitles = new ArrayList<>();
+
+
+            for (String verse : listOfVerses) {
+                String prefix = "";
+
+                if (verse.startsWith("R:")) {
+                    verse = verse.substring(2);
+                    prefix = "R:";
+                }
+
+                String[] lines = verse.split("\n");
+
+                for (int i = 0; i+1 < lines.length; i+=2)
+                    listOfSubtitles.add(prefix + lines[i] + "\n" + lines[i+1]);
+
+                if (lines.length % 2 == 1)
+                    listOfSubtitles.add(prefix + lines[lines.length-1]);
+            }
+
+            return listOfSubtitles;
         }
 
         return listOfVerses;
@@ -140,7 +163,7 @@ public class GenerateSlides {
         }
     }
 
-    private static void createNewPpt(List<String> updateSplit, String fileName) throws IOException {
+    private static void createNewPpt(List<String> updateSplit, String fileName, boolean lowerThird) throws IOException {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         double width = screenSize.getWidth();
         double height = screenSize.getHeight();
@@ -158,7 +181,7 @@ public class GenerateSlides {
         if (length > 0) {
 
             for (String s : updateSplit) {
-                addOptionToSlide(s, new Rectangle((int) width, (int) height), ppt.createSlide(layout));
+                addOptionToSlide(s, new Rectangle((int) width, (int) height), ppt.createSlide(layout), lowerThird);
             }
 
         }
@@ -169,7 +192,7 @@ public class GenerateSlides {
         out.close();
     }
 
-    private static void addOptionToSlide(String s, Rectangle anchor, XSLFSlide slide1) {
+    private static void addOptionToSlide(String s, Rectangle anchor, XSLFSlide slide1, boolean lowerThird) {
         XSLFTextBox shape = slide1.createTextBox();
         shape.setAnchor(anchor);
 
@@ -179,18 +202,21 @@ public class GenerateSlides {
        
         XSLFTextParagraph p = shape.addNewTextParagraph();
 
-        shape.setVerticalAlignment(VerticalAlignment.MIDDLE);
+        shape.setVerticalAlignment(lowerThird ? VerticalAlignment.BOTTOM : VerticalAlignment.MIDDLE);
         p.setTextAlign(TextParagraph.TextAlign.CENTER);
         p.setFontAlign(TextParagraph.FontAlign.CENTER);
         XSLFTextRun r = p.addNewTextRun();
+
+        if (s.trim().startsWith("R:")) {
+            r.setItalic(true);
+            s = s.trim().substring(2);
+        }
+
         r.setText(s.trim());
         r.setFontColor(Color.WHITE);
         r.setFontSize(FONT_SIZE);
         r.setBold(true);
         setOutlineAndGlow(r, createSolidFillLineProperties(java.awt.Color.BLACK, 1.5), createGlow(java.awt.Color.BLACK, 7));
-
-        if (s.trim().startsWith("R:"))
-            r.setItalic(true);
 
         r.setFontFamily(CALIBRI, FontGroup.LATIN); // or CALIBRI_LIGHT
     }
