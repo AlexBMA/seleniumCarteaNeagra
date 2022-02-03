@@ -25,8 +25,8 @@ public class GenerateSlides {
     public static final long INCH_PT = 72;
     public static final double FONT_SIZE = 80;
 
-    public static final String OUTPUT_FOLDER = "ppt_files/";
-    public static final String INPUT_FOLDER = "txt_files/";
+    public static final String OUTPUT_FOLDER = "ppt_files\\";
+    public static final String INPUT_FOLDER = "txt_files\\";
 
     /*
      * Title Slide
@@ -42,34 +42,34 @@ public class GenerateSlides {
      * Content with Caption
      */
 
-    public static void main(String[] args) throws IOException {
-        System.out.println("BEGIN");
-
-        String txtFile ="D:\\Proiecte\\carteaNeagraSel\\TestNewR.txt";
-
-        String text = new String(Files.readAllBytes(Paths.get(txtFile)));
-        System.out.println(text);
-
-        String[] splitText = text.split("[0-9][.]+|[0-9]{1,}|(\r\n:)");
-
-        List<String> updateSplit = new ArrayList<>();
-
-        updateTextForPpt(text, splitText, updateSplit);
-        createNewPpt(updateSplit,OUTPUT_FOLDER + "TestNewRegex.ppt");
-
-        System.out.println("Done");
+    public static void main222() throws IOException {
+//        System.out.println("BEGIN");
+//
+//        String txtFile ="D:\\Proiecte\\carteaNeagraSel\\TestNewR.txt";
+//
+//        String text = new String(Files.readAllBytes(Paths.get(txtFile)));
+//        System.out.println(text);
+//
+//        String[] splitText = text.split("[0-9][.]+|[0-9]{1,}|(\r\n:)");
+//
+//        List<String> updateSplit = new ArrayList<>();
+//
+//        updateTextForPpt(text, splitText, updateSplit);
+//        createNewPpt(updateSplit,OUTPUT_FOLDER + "TestNewRegex.ppt");
+//
+//        System.out.println("Done");
 
     }
 
-    public static void main222() throws IOException {
+    public static void main(String[] args) throws IOException {
 
-        System.out.println("BEGIN");
+        System.out.println("BEGIN MAKE SURE YOU PUT THE RIGHT SLASH WINDOWS OR LINUX  \\ is WINDOWS / is LINUX ");
 
         Stream<Path> paths = Files.walk(Paths.get(INPUT_FOLDER));
         List<Path> fileNames = paths.filter(item -> item.toString().endsWith("txt")).collect(Collectors.toList());
 
         for (Path item : fileNames) {
-            int position = item.toString().lastIndexOf("/");
+            int position = item.toString().lastIndexOf("\\");
             // System.out.println(position);
             String pptTitle = item.toString().substring(position + 1).replace("txt", "pptx");
             // System.out.println(pptTitle);
@@ -162,28 +162,28 @@ public class GenerateSlides {
 
     private static void updateTextForPpt(String text, String[] splitText, List<String> updateSplit) {
 
-        if (text.contains("Cor:")) {
-            String corRefren = splitText[3].trim();
-
-
-            for (String t : splitText) {
-                String item = t.trim();
-
-                if (!item.isBlank() && !item.equals(corRefren)) {
-
-                    updateSplit.add(item);
-                    updateSplit.add(refren);
-                }
-            }
-        } else {
-
-            for (String t : splitText) {
-                String item = t.trim();
-                if (!item.isBlank()) {
-                    updateSplit.add(item);
-                }
-            }
-        }
+//        if (text.contains("Cor:")) {
+//            String corRefren = splitText[3].trim();
+//
+//
+//            for (String t : splitText) {
+//                String item = t.trim();
+//
+//                if (!item.isBlank() && !item.equals(corRefren)) {
+//
+//                    updateSplit.add(item);
+//                    updateSplit.add(refren);
+//                }
+//            }
+//        } else {
+//
+//            for (String t : splitText) {
+//                String item = t.trim();
+//                if (!item.isBlank()) {
+//                    updateSplit.add(item);
+//                }
+//            }
+//        }
     }
 
     private static void createNewPpt(List<String> updateSplit, String fileName, boolean lowerThird) throws IOException {
