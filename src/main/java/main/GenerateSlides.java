@@ -72,6 +72,8 @@ public class GenerateSlides {
 
     public static void main(String[] args) throws IOException {
 
+        listFontFamily();
+
         System.out.println("BEGIN MAKE SURE YOU PUT THE RIGHT SLASH WINDOWS OR LINUX  \\ is WINDOWS / is LINUX ");
 
         slashUpdate();
@@ -89,7 +91,6 @@ public class GenerateSlides {
             String text = Files.readString(Paths.get(item.toString())).replace("\r", "");
             // System.out.println(text);
 
-            String[] splitText = text.split("(\r\n\r\n[\r\n]*)|(\n\n[\n]*)");
             System.out.println("splitting the text by verses");
             List<String> updateSplit = splitTextByVerses(text,false);
 
@@ -103,6 +104,14 @@ public class GenerateSlides {
         paths.close();
 
 
+    }
+
+    private static void listFontFamily() {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        String[] fontFamilies = ge.getAvailableFontFamilyNames();
+        for (String ff : fontFamilies) {
+            System.out.println(ff);
+        }
     }
 
     private static void slashUpdate() {
@@ -348,9 +357,5 @@ public class GenerateSlides {
     // }
     // }
 
-    // GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-    // String[] fontFamilies = ge.getAvailableFontFamilyNames();
-    // for (String ff : fontFamilies) {
-    // System.out.println(ff);
-    // }
+
 }
