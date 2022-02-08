@@ -1,6 +1,5 @@
 package main;
 
-import helper.HelperClass;
 import org.apache.poi.common.usermodel.fonts.FontGroup;
 import org.apache.poi.sl.usermodel.TextParagraph;
 import org.apache.poi.sl.usermodel.VerticalAlignment;
@@ -9,7 +8,6 @@ import org.apache.poi.xslf.usermodel.*;
 
 import java.awt.*;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,6 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static helper.Constants.*;
 import static helper.HelperClass.*;
 
 public class GenerateSlides {
@@ -26,8 +25,17 @@ public class GenerateSlides {
     public static final String CALIBRI = "Calibri";
     public static final double FONT_SIZE = 80;
 
-    public static final String OUTPUT_FOLDER = "ppt_files\\";
-    public static final String INPUT_FOLDER = "txt_files\\";
+    public static final StringBuilder OUTPUT_FOLDER = new StringBuilder("ppt_files");
+    public static final StringBuilder INPUT_FOLDER = new StringBuilder("txt_files");
+    public static final StringBuilder SLASH = new StringBuilder("");
+
+    public static final String R = "R:";
+    public static final String NEW_LINE = "\n";
+    public static final double OUTLINE_WEIGHT = 1.5;
+    public static final int RADIUS_PT = 7;
+    public static final int RED = 9;
+    public static final int GREEN = 45;
+    public static final int BLUE = 38;
 
     /*
      * Title Slide
@@ -66,13 +74,15 @@ public class GenerateSlides {
 
         System.out.println("BEGIN MAKE SURE YOU PUT THE RIGHT SLASH WINDOWS OR LINUX  \\ is WINDOWS / is LINUX ");
 
-        Stream<Path> paths = Files.walk(Paths.get(INPUT_FOLDER));
-        List<Path> fileNames = paths.filter(item -> item.toString().endsWith("txt")).collect(Collectors.toList());
+        slashUpdate();
+
+        Stream<Path> paths = Files.walk(Paths.get(INPUT_FOLDER.toString()));
+        List<Path> fileNames = paths.filter(item -> item.toString().endsWith(TXT_EXTENSION)).collect(Collectors.toList());
 
         for (Path item : fileNames) {
-            int position = item.toString().lastIndexOf("\\");
+            int position = item.toString().lastIndexOf(SLASH.toString());
             // System.out.println(position);
-            String pptTitle = item.toString().substring(position + 1).replace("txt", "pptx");
+            String pptTitle = item.toString().substring(position + 1).replace(TXT_EXTENSION, PPTX_EXTENSION);
             // System.out.println(pptTitle);
 
             System.out.println("reading txt file");
@@ -91,15 +101,41 @@ public class GenerateSlides {
             System.out.println("Done");
         }
         paths.close();
+
+
+    }
+
+    private static void slashUpdate() {
+        String os = System.getProperty(OS_NAME).toLowerCase();
+        System.out.println(os);
+        if (os.contains(WIN)){
+            OUTPUT_FOLDER.append(WINDOWS_FILE_SLASH);
+            INPUT_FOLDER.append(WINDOWS_FILE_SLASH);
+            SLASH.append(WINDOWS_FILE_SLASH);
+            System.out.println("It is windows ");
+        }
+        else if (os.contains(OSX)){
+            System.out.println("It is apple ");
+            //Operating system is Apple OSX based
+        }
+        else if (os.contains(NIX) || os.contains(AIX) || os.contains(NUX)){
+            //Operating system is based on Linux/Unix/*AIX
+            OUTPUT_FOLDER.append(LINUX_FILE_SLASH);
+            INPUT_FOLDER.append(LINUX_FILE_SLASH);
+            SLASH.append(LINUX_FILE_SLASH);
+            System.out.println("It is Linux/Uni/*AIX");
+        }
     }
 
     private static List<String> splitTextByVerses(String text, boolean lowerThird) {
         String[] splitText = text.split("(\n\n[\n]*)");
-        int firstIndexChorus = -1, lastIndexChorus = -1;
+        int firstIndexChorus = -1;
+        int lastIndexChorus = -1;
         boolean multipleChorus = false;
 
-        for (int i = 0; i < splitText.length; i++) {
-            if (splitText[i].startsWith("R:")) { // the following verse is a chorus
+        int lengthSplitText = splitText.length;
+        for (int i = 0; i < lengthSplitText; i++) {
+            if (splitText[i].startsWith(R)) { // the following verse is a chorus
                 // the first encounter of a chorus
                 if (firstIndexChorus == -1) {
                     firstIndexChorus = i;
@@ -119,12 +155,12 @@ public class GenerateSlides {
         // if no chorus was found, do not perform any addition
         if (firstIndexChorus == -1) {
             multipleChorus = true;
-            lastIndexChorus = splitText.length - 1;
+            lastIndexChorus = lengthSplitText - 1;
         }
 
         List<String> listOfVerses = new ArrayList<>(Arrays.asList(splitText).subList(0, lastIndexChorus + 1));
 
-        for (int i = lastIndexChorus + 1; i < splitText.length; i++) {
+        for (int i = lastIndexChorus + 1; i < lengthSplitText; i++) {
             listOfVerses.add(splitText[i]);
 
             // if there is only one chorus, add it after each verse
@@ -141,18 +177,19 @@ public class GenerateSlides {
             for (String verse : listOfVerses) {
                 String prefix = "";
 
-                if (verse.startsWith("R:")) {
+                if (verse.startsWith(R)) {
                     verse = verse.substring(2);
-                    prefix = "R:";
+                    prefix = R;
                 }
 
-                String[] lines = verse.split("\n");
+                String[] lines = verse.split(NEW_LINE);
 
-                for (int i = 0; i+1 < lines.length; i+=2)
-                    listOfSubtitles.add(prefix + lines[i] + "\n" + lines[i+1]);
+                int length = lines.length;
+                for (int index = 0; index+1 < length; index+=2)
+                    listOfSubtitles.add(prefix + lines[index] + NEW_LINE + lines[index+1]);
 
-                if (lines.length % 2 == 1)
-                    listOfSubtitles.add(prefix + lines[lines.length-1]);
+                if (length % 2 == 1)
+                    listOfSubtitles.add(prefix + lines[length -1]);
             }
 
             return listOfSubtitles;
@@ -196,7 +233,7 @@ public class GenerateSlides {
         ppt.setPageSize(new Dimension((int) width, (int) height));
 
         XSLFSlideMaster defaultMaster = ppt.getSlideMasters().get(0);
-        defaultMaster.getBackground().setFillColor(new Color(9, 45, 38));
+        defaultMaster.getBackground().setFillColor(new Color(RED, GREEN, BLUE));
 
         XSLFSlideLayout layout = defaultMaster.getLayout(SlideLayout.BLANK);
 
@@ -220,8 +257,9 @@ public class GenerateSlides {
         shape.setAnchor(anchor);
 
         // remove the other text paragraphs that were created
-        if (shape.getTextParagraphs().size() > 0)
+        if (!shape.getTextParagraphs().isEmpty()) {
             shape.clearText();
+        }
        
         XSLFTextParagraph p = shape.addNewTextParagraph();
 
@@ -230,7 +268,7 @@ public class GenerateSlides {
         p.setFontAlign(TextParagraph.FontAlign.CENTER);
         XSLFTextRun r = p.addNewTextRun();
 
-        if (s.trim().startsWith("R:")) {
+        if (s.trim().startsWith(R)) {
             r.setItalic(true);
             s = s.trim().substring(2);
         }
@@ -239,7 +277,7 @@ public class GenerateSlides {
         r.setFontColor(Color.WHITE);
         r.setFontSize(FONT_SIZE);
         r.setBold(true);
-        setOutlineAndGlow(r, createSolidFillLineProperties(java.awt.Color.BLACK, 1.5), createGlow(java.awt.Color.BLACK, 7));
+        setOutlineAndGlow(r, createSolidFillLineProperties(java.awt.Color.BLACK, OUTLINE_WEIGHT), createGlow(java.awt.Color.BLACK, RADIUS_PT));
 
         r.setFontFamily(CALIBRI, FontGroup.LATIN); // or CALIBRI_LIGHT
     }

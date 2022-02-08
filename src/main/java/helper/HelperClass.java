@@ -6,7 +6,6 @@ public class HelperClass {
 
     public static final long EMU = 914400;
     public static final long INCH_PT = 72;
-    public static final double FONT_SIZE = 80;
 
     public static org.openxmlformats.schemas.drawingml.x2006.main.CTLineProperties getOutline(XSLFTextRun run) {
         // get underlying CTRegularTextRun object
