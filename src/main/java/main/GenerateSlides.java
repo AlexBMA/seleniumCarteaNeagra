@@ -1,5 +1,6 @@
 package main;
 
+import helper.HelperClass;
 import org.apache.poi.common.usermodel.fonts.FontGroup;
 import org.apache.poi.sl.usermodel.TextParagraph;
 import org.apache.poi.sl.usermodel.VerticalAlignment;
@@ -18,11 +19,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static helper.HelperClass.*;
+
 public class GenerateSlides {
     public static final String CALIBRI_LIGHT = "Calibri Light";
     public static final String CALIBRI = "Calibri";
-    public static final long EMU = 914400;
-    public static final long INCH_PT = 72;
     public static final double FONT_SIZE = 80;
 
     public static final String OUTPUT_FOLDER = "ppt_files\\";
@@ -199,7 +200,6 @@ public class GenerateSlides {
 
         XSLFSlideLayout layout = defaultMaster.getLayout(SlideLayout.BLANK);
 
-
         int length = updateSplit.size();
         if (length > 0) {
 
@@ -244,31 +244,6 @@ public class GenerateSlides {
         r.setFontFamily(CALIBRI, FontGroup.LATIN); // or CALIBRI_LIGHT
     }
 
-    static org.openxmlformats.schemas.drawingml.x2006.main.CTEffectList createGlow(java.awt.Color color, double radiusPt) {
-        // create new CTEffectList
-        org.openxmlformats.schemas.drawingml.x2006.main.CTEffectList effectList = org.openxmlformats.schemas.drawingml.x2006.main.CTEffectList.Factory
-                .newInstance();
-        // add Glow effect
-        org.openxmlformats.schemas.drawingml.x2006.main.CTGlowEffect glowEffect = effectList.addNewGlow();
-        glowEffect.setRad((int) (radiusPt / INCH_PT * EMU)); // glow radius
-        glowEffect.addNewSrgbClr().setVal(new byte[] {(byte) color.getRed(), (byte) color.getGreen(), (byte) color.getBlue()}); // glow color
-        return effectList;
-    }
-
-    // code partly taken from
-    // https://stackoverflow.com/questions/67737897/how-to-add-text-outlines-to-text-within-powerpoint-via-apache-poi
-
-    static org.openxmlformats.schemas.drawingml.x2006.main.CTLineProperties createSolidFillLineProperties(
-            java.awt.Color color, double outlineWeight) {
-        // create new CTLineProperties
-        org.openxmlformats.schemas.drawingml.x2006.main.CTLineProperties lineProperties = org.openxmlformats.schemas.drawingml.x2006.main.CTLineProperties.Factory
-                .newInstance();
-        // set line solid fill color
-        lineProperties.addNewSolidFill().addNewSrgbClr()
-                .setVal(new byte[] { (byte) color.getRed(), (byte) color.getGreen(), (byte) color.getBlue() }); // outline color
-        lineProperties.setW((int) (outlineWeight / INCH_PT * EMU)); // outline weight
-        return lineProperties;
-    }
 
     static void setOutlineAndGlow(XSLFTextRun run,
             org.openxmlformats.schemas.drawingml.x2006.main.CTLineProperties lineProperties,
@@ -294,39 +269,9 @@ public class GenerateSlides {
         ctRegularTextRun.getRPr().setEffectLst(effectList);
     }
 
-    static org.openxmlformats.schemas.drawingml.x2006.main.CTLineProperties getOutline(XSLFTextRun run) {
-        // get underlying CTRegularTextRun object
-        org.openxmlformats.schemas.drawingml.x2006.main.CTRegularTextRun ctRegularTextRun = (org.openxmlformats.schemas.drawingml.x2006.main.CTRegularTextRun) run
-                .getXmlObject();
-        // Are there run properties already? If not, return null.
-        if (ctRegularTextRun.getRPr() == null)
-            return null;
-        // get outline, may be null
-        org.openxmlformats.schemas.drawingml.x2006.main.CTLineProperties lineProperties = ctRegularTextRun.getRPr()
-                .getLn();
-        // make a copy to avoid orphaned exceptions or value disconnected exception when
-        // set to its own XML parent
-        if (lineProperties != null)
-            lineProperties = (org.openxmlformats.schemas.drawingml.x2006.main.CTLineProperties) lineProperties.copy();
-        return lineProperties;
-    }
 
-    static org.openxmlformats.schemas.drawingml.x2006.main.CTEffectList getEffectList(XSLFTextRun run) {
-        // get underlying CTRegularTextRun object
-        org.openxmlformats.schemas.drawingml.x2006.main.CTRegularTextRun ctRegularTextRun = (org.openxmlformats.schemas.drawingml.x2006.main.CTRegularTextRun) run
-                .getXmlObject();
-        // Are there run properties already? If not, return null.
-        if (ctRegularTextRun.getRPr() == null)
-            return null;
-        // get outline, may be null
-        org.openxmlformats.schemas.drawingml.x2006.main.CTEffectList effectList = ctRegularTextRun.getRPr()
-                .getEffectLst();
-        // make a copy to avoid orphaned exceptions or value disconnected exception when
-        // set to its own XML parent
-        if (effectList != null)
-            effectList = (org.openxmlformats.schemas.drawingml.x2006.main.CTEffectList) effectList.copy();
-        return effectList;
-    }
+
+
 
     // your method fontStyles taken to Java code
     static void fontStyles(XSLFTextRun templateRun, XSLFTextShape textShape) {
