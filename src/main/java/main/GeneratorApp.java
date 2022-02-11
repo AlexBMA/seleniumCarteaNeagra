@@ -278,7 +278,7 @@ public class GeneratorApp extends JFrame {
     }
 
     private void generatePpt() {
-        String verseText = versesTextArea.getText();
+        String verseText = versesTextArea.getText().replace("\r", "");
         if(verseText.length() == 0) {
             JOptionPane.showMessageDialog(null, "You should provide some text to create a presentation!");
             return;
