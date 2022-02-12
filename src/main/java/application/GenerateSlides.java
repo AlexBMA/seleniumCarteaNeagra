@@ -1,25 +1,24 @@
-package main;
+package application;
 
+import application.helper.Constants;
 import org.apache.poi.common.usermodel.fonts.FontGroup;
 import org.apache.poi.sl.usermodel.TextParagraph;
 import org.apache.poi.sl.usermodel.VerticalAlignment;
 import org.apache.poi.sl.usermodel.PaintStyle;
 import org.apache.poi.xslf.usermodel.*;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.awt.*;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static helper.Constants.*;
-import static helper.HelperClass.*;
+import static application.helper.HelperClass.*;
 
+
+@SpringBootApplication
 public class GenerateSlides {
     public static final String CALIBRI_LIGHT = "Calibri Light";
     public static final String CALIBRI = "Calibri";
@@ -70,38 +69,42 @@ public class GenerateSlides {
 
     }
 
+
     public static void main(String[] args) throws IOException {
 
-        listFontFamily();
+        SpringApplication.run(GenerateSlides.class, args);
 
-        System.out.println("BEGIN MAKE SURE YOU PUT THE RIGHT SLASH WINDOWS OR LINUX  \\ is WINDOWS / is LINUX ");
 
-        slashUpdate();
+        //listFontFamily();
 
-        Stream<Path> paths = Files.walk(Paths.get(INPUT_FOLDER.toString()));
-        List<Path> fileNames = paths.filter(item -> item.toString().endsWith(TXT_EXTENSION)).collect(Collectors.toList());
+        //System.out.println("BEGIN MAKE SURE YOU PUT THE RIGHT SLASH WINDOWS OR LINUX  \\ is WINDOWS / is LINUX ");
 
-        for (Path item : fileNames) {
-            int position = item.toString().lastIndexOf(SLASH.toString());
-            // System.out.println(position);
-            String pptTitle = item.toString().substring(position + 1).replace(TXT_EXTENSION, PPTX_EXTENSION);
-            // System.out.println(pptTitle);
-
-            System.out.println("reading txt file");
-            String text = Files.readString(Paths.get(item.toString())).replace("\r", "");
-            // System.out.println(text);
-
-            System.out.println("splitting the text by verses");
-            List<String> updateSplit = splitTextByVerses(text,false);
-
-            // updateTextForPpt(text, splitText, updateSplit);
-            System.out.println("creating the ppt file");
-            System.out.println(OUTPUT_FOLDER);
-            createNewPpt(updateSplit, OUTPUT_FOLDER + pptTitle, false);
-
-            System.out.println("Done");
-        }
-        paths.close();
+//        slashUpdate();
+//
+//        Stream<Path> paths = Files.walk(Paths.get(INPUT_FOLDER.toString()));
+//        List<Path> fileNames = paths.filter(item -> item.toString().endsWith(TXT_EXTENSION)).collect(Collectors.toList());
+//
+//        for (Path item : fileNames) {
+//            int position = item.toString().lastIndexOf(SLASH.toString());
+//            // System.out.println(position);
+//            String pptTitle = item.toString().substring(position + 1).replace(TXT_EXTENSION, PPTX_EXTENSION);
+//            // System.out.println(pptTitle);
+//
+//            System.out.println("reading txt file");
+//            String text = Files.readString(Paths.get(item.toString())).replace("\r", "");
+//            // System.out.println(text);
+//
+//            System.out.println("splitting the text by verses");
+//            List<String> updateSplit = splitTextByVerses(text,false);
+//
+//            // updateTextForPpt(text, splitText, updateSplit);
+//            System.out.println("creating the ppt file");
+//            System.out.println(OUTPUT_FOLDER);
+//            createNewPpt(updateSplit, OUTPUT_FOLDER + pptTitle, false);
+//
+//            System.out.println("Done");
+//        }
+//        paths.close();
 
 
     }
@@ -115,23 +118,23 @@ public class GenerateSlides {
     }
 
     private static void slashUpdate() {
-        String os = System.getProperty(OS_NAME).toLowerCase();
+        String os = System.getProperty(Constants.OS_NAME).toLowerCase();
         System.out.println(os);
-        if (os.contains(WIN)){
-            OUTPUT_FOLDER.append(WINDOWS_FILE_SLASH);
-            INPUT_FOLDER.append(WINDOWS_FILE_SLASH);
-            SLASH.append(WINDOWS_FILE_SLASH);
+        if (os.contains(Constants.WIN)){
+            OUTPUT_FOLDER.append(Constants.WINDOWS_FILE_SLASH);
+            INPUT_FOLDER.append(Constants.WINDOWS_FILE_SLASH);
+            SLASH.append(Constants.WINDOWS_FILE_SLASH);
             System.out.println("It is windows ");
         }
-        else if (os.contains(OSX)){
+        else if (os.contains(Constants.OSX)){
             System.out.println("It is apple ");
             //Operating system is Apple OSX based
         }
-        else if (os.contains(NIX) || os.contains(AIX) || os.contains(NUX)){
+        else if (os.contains(Constants.NIX) || os.contains(Constants.AIX) || os.contains(Constants.NUX)){
             //Operating system is based on Linux/Unix/*AIX
-            OUTPUT_FOLDER.append(LINUX_FILE_SLASH);
-            INPUT_FOLDER.append(LINUX_FILE_SLASH);
-            SLASH.append(LINUX_FILE_SLASH);
+            OUTPUT_FOLDER.append(Constants.LINUX_FILE_SLASH);
+            INPUT_FOLDER.append(Constants.LINUX_FILE_SLASH);
+            SLASH.append(Constants.LINUX_FILE_SLASH);
             System.out.println("It is Linux/Uni/*AIX");
         }
     }

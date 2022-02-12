@@ -1,4 +1,4 @@
-package main;
+package application.main;
 
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbException;
