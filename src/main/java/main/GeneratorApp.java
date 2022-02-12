@@ -107,8 +107,8 @@ public class GeneratorApp extends JFrame {
         JPanel textAreaPanel = new JPanel();
         textAreaPanel.setLayout(new BoxLayout(textAreaPanel, BoxLayout.PAGE_AXIS));
         versesTextArea = new JTextArea();
-        versesTextArea.setPreferredSize(new Dimension(550, 400));
         JScrollPane scrollPane = new JScrollPane(versesTextArea);
+        scrollPane.setPreferredSize(new Dimension(550, 450));
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
         textAreaPanel.add(new JLabel("Verses"));
