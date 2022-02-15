@@ -1,9 +1,9 @@
 package application.main;
 
-import jcifs.smb.NtlmPasswordAuthentication;
-import jcifs.smb.SmbException;
-import jcifs.smb.SmbFile;
-import jcifs.smb.SmbFileOutputStream;
+//import jcifs.smb.NtlmPasswordAuthentication;
+//import jcifs.smb.SmbException;
+//import jcifs.smb.SmbFile;
+//import jcifs.smb.SmbFileOutputStream;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -29,13 +29,13 @@ public class SeleniumCNeagra {
         String path2 ="smb://192.168.1.11";
         String path3 ="smb://192.168.56.1";
 
-        NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("",user, pass);
-
-
-
-
-        SmbFile smbFile = new SmbFile(path3,auth);
-        SmbFile[] smbFiles = smbFile.listFiles();
+//        NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("",user, pass);
+//
+//
+//
+//
+//        SmbFile smbFile = new SmbFile(path3,auth);
+//        SmbFile[] smbFiles = smbFile.listFiles();
         String aa="123456";
 
 //        SmbFileOutputStream smbfos = new SmbFileOutputStream(smbFile);

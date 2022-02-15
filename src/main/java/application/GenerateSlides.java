@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static application.helper.Constants.*;
 import static application.helper.HelperClass.*;
 
 
@@ -24,9 +25,7 @@ public class GenerateSlides {
     public static final String CALIBRI = "Calibri";
     public static final double FONT_SIZE = 80;
 
-    public static final StringBuilder OUTPUT_FOLDER = new StringBuilder("ppt_files");
-    public static final StringBuilder INPUT_FOLDER = new StringBuilder("txt_files");
-    public static final StringBuilder SLASH = new StringBuilder("");
+
 
     public static final String R = "R:";
     public static final String NEW_LINE = "\n";
@@ -73,6 +72,9 @@ public class GenerateSlides {
     public static void main(String[] args) throws IOException {
 
         SpringApplication.run(GenerateSlides.class, args);
+        slashUpdate();
+
+        //Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
 
         //listFontFamily();
@@ -236,13 +238,13 @@ public class GenerateSlides {
 //        }
     }
 
-    private static void createNewPpt(List<String> updateSplit, String fileName, boolean lowerThird) throws IOException {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        double width = screenSize.getWidth();
-        double height = screenSize.getHeight();
+    private static void createNewPpt(List<String> updateSplit, String fileName, boolean lowerThird, int width, int height) throws IOException {
+        //Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+//        double width = screenSize.getWidth();
+//        double height = screenSize.getHeight();
 
         XMLSlideShow ppt = new XMLSlideShow();
-        ppt.setPageSize(new Dimension((int) width, (int) height));
+        ppt.setPageSize(new Dimension(width, height));
 
         XSLFSlideMaster defaultMaster = ppt.getSlideMasters().get(0);
         defaultMaster.getBackground().setFillColor(new Color(RED, GREEN, BLUE));
@@ -253,7 +255,7 @@ public class GenerateSlides {
         if (length > 0) {
 
             for (String s : updateSplit) {
-                addOptionToSlide(s, new Rectangle((int) width, (int) height), ppt.createSlide(layout), lowerThird);
+                addOptionToSlide(s, new Rectangle(width, height), ppt.createSlide(layout), lowerThird);
             }
 
         }
@@ -295,7 +297,7 @@ public class GenerateSlides {
     }
 
 
-    static void setOutlineAndGlow(XSLFTextRun run,
+    public static void setOutlineAndGlow(XSLFTextRun run,
             org.openxmlformats.schemas.drawingml.x2006.main.CTLineProperties lineProperties,
             org.openxmlformats.schemas.drawingml.x2006.main.CTEffectList effectList) {
         // get underlying CTRegularTextRun object

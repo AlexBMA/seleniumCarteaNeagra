@@ -14,4 +14,8 @@ public class Constants {
 
     public static  final String WINDOWS_FILE_SLASH="\\";
     public static final String LINUX_FILE_SLASH="/";
+
+    public static final StringBuilder OUTPUT_FOLDER = new StringBuilder("ppt_files");
+    public static final StringBuilder INPUT_FOLDER = new StringBuilder("txt_files");
+    public static final StringBuilder SLASH = new StringBuilder("");
 }
