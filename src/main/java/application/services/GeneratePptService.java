@@ -1,6 +1,5 @@
 package application.services;
 
-import application.helper.Constants;
 import org.apache.poi.common.usermodel.fonts.FontGroup;
 import org.apache.poi.sl.usermodel.TextParagraph;
 import org.apache.poi.sl.usermodel.VerticalAlignment;
@@ -46,6 +45,8 @@ public class GeneratePptService {
     }
 
     private List<String> splitTextByVerses(String text, boolean lowerThird) {
+        // for windows case
+        text = text.trim().replaceAll("\\r","");
         String[] splitText = text.split("(\n\n[\n]*)");
         int firstIndexChorus = -1;
         int lastIndexChorus = -1;
