@@ -39,10 +39,10 @@ public class GeneratePptService {
 
         String pptFile = OUTPUT_FOLDER + pptTitle;
 
-        //createNewPpt(updateSplit, pptFile, false, width, height);
+        createNewPpt(updateSplit, pptFile, false, width, height);
 
-        //InputStream fileInputStream = new FileInputStream(pptFile);
-        return null;
+        InputStream fileInputStream = new FileInputStream(pptFile);
+        return fileInputStream.readAllBytes();
     }
 
     private List<String> splitTextByVerses(String text, boolean lowerThird) {
