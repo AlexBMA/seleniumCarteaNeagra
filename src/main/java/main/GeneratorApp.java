@@ -15,12 +15,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+import static main.SeleniumResurseCrestine.initSelenium;
+
 public class GeneratorApp extends JFrame {
     JPanel fontColorDisplay, outlineColorDisplay, glowColorDisplay, backgroundColorDisplay;
     JSpinner fontSizeSpinner, outlineWidthSpinner, glowRadiusSpinner;
     JTextArea versesTextArea;
     JCheckBox lowerThirdCheckBox;
-    JTextField inputFileTextField, outputFileTextField;
+    JTextField inputFileTextField, outputFileTextField, linkInputField;
     List<String> verseList;
 
     final String FONTNAME = "Calibri";
@@ -41,11 +43,24 @@ public class GeneratorApp extends JFrame {
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+        pane.add(initResurseCrestineOptions());
         pane.add(initFileOptions());
         pane.add(initTextArea());
         pane.add(initSlideOptions());
         pane.add(initTextOptions());
         pane.add(initGenerateButton());
+    }
+
+    private JPanel initResurseCrestineOptions(){
+        JPanel linkContainer = new JPanel();
+        Border textContainerBorder = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black, 5) ,"File options");
+        linkContainer.setBorder(textContainerBorder);
+        linkContainer.setLayout(new BoxLayout(linkContainer, BoxLayout.PAGE_AXIS));
+
+
+        linkContainer.add(initInputWebSite());
+
+        return linkContainer;
     }
 
     private JPanel initFileOptions() {
@@ -58,6 +73,27 @@ public class GeneratorApp extends JFrame {
         fileContainer.add(initOutputFile());
 
         return fileContainer;
+    }
+
+    private JPanel initInputWebSite(){
+        JPanel inputFileContainer = new JPanel();
+        inputFileContainer.setLayout(new FlowLayout());
+
+        JLabel inputFileLabel = new JLabel("Input from resurse crestine:");
+        linkInputField = new JTextField();
+        linkInputField.setPreferredSize(new Dimension(300, 20));
+        JButton linkButton = new JButton("Get Text");
+        linkButton.addActionListener(e->{
+            String text = linkInputField.getText();
+            String textFromSite = SeleniumResurseCrestine.getSongTextFromResurseCrestine(text);
+            versesTextArea.setText(textFromSite);
+        });
+
+        inputFileContainer.add(inputFileLabel);
+        inputFileContainer.add(linkInputField);
+        inputFileContainer.add(linkButton);
+
+        return inputFileContainer;
     }
 
     private JPanel initInputFile() {
@@ -340,6 +376,7 @@ public class GeneratorApp extends JFrame {
     }
 
     public static void main(String[] args) {
+        initSelenium();
         EventQueue.invokeLater(() -> {
             var genApp = new GeneratorApp();
             genApp.setVisible(true);
