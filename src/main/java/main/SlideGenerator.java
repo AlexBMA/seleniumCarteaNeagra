@@ -61,7 +61,7 @@ public class SlideGenerator {
 
             // if there is only one chorus, add it after each verse
             // firstIndexChorus will act also as an indicator for the periodicity of inserting the chorus
-            if (!multipleChorus && (i - lastIndexChorus) % firstIndexChorus == 0) {
+            if (!multipleChorus && (firstIndexChorus == 0 || (i - lastIndexChorus) % firstIndexChorus == 0)) {
                 listOfVerses.addAll(Arrays.asList(splitText).subList(firstIndexChorus, lastIndexChorus + 1));
             }
         }
