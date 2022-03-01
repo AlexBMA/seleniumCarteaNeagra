@@ -9,12 +9,14 @@ import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import java.awt.*;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+import static main.SeleniumResurseCrestine.closeSelenium;
 import static main.SeleniumResurseCrestine.initSelenium;
 
 public class GeneratorApp extends JFrame {
@@ -49,6 +51,13 @@ public class GeneratorApp extends JFrame {
         pane.add(initSlideOptions());
         pane.add(initTextOptions());
         pane.add(initGenerateButton());
+
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                closeSelenium();
+            }
+        });
     }
 
     private JPanel initResurseCrestineOptions(){
@@ -56,7 +65,6 @@ public class GeneratorApp extends JFrame {
         Border textContainerBorder = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black, 5) ,"File options");
         linkContainer.setBorder(textContainerBorder);
         linkContainer.setLayout(new BoxLayout(linkContainer, BoxLayout.PAGE_AXIS));
-
 
         linkContainer.add(initInputWebSite());
 
@@ -372,7 +380,7 @@ public class GeneratorApp extends JFrame {
             ex.printStackTrace();
         }
 
-        JOptionPane.showMessageDialog(null, "Done!");
+        // JOptionPane.showMessageDialog(null, "Done!");
     }
 
     public static void main(String[] args) {
