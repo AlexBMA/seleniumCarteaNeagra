@@ -7,9 +7,7 @@ import org.apache.poi.xslf.usermodel.XSLFTextRun;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
 import java.awt.*;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,7 +22,7 @@ public class GeneratorApp extends JFrame {
     JSpinner fontSizeSpinner, outlineWidthSpinner, glowRadiusSpinner;
     JTextArea versesTextArea;
     JCheckBox lowerThirdCheckBox;
-    JTextField inputFileTextField, outputFileTextField, linkInputField;
+    JTextField inputFileTextField, outputFileTextField, linkInputField, searchWebsiteInputField;
     List<String> verseList;
 
     final String FONTNAME = "Calibri";
@@ -45,6 +43,7 @@ public class GeneratorApp extends JFrame {
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+        pane.add(initCautaInResuseRestineOptions());
         pane.add(initResurseCrestineOptions());
         pane.add(initFileOptions());
         pane.add(initTextArea());
@@ -58,6 +57,16 @@ public class GeneratorApp extends JFrame {
                 closeSelenium();
             }
         });
+    }
+    private JPanel initCautaInResuseRestineOptions(){
+        JPanel linkContainer = new JPanel();
+        Border textContainerBorder = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black, 5) ,"Search options");
+        linkContainer.setBorder(textContainerBorder);
+        linkContainer.setLayout(new BoxLayout(linkContainer, BoxLayout.PAGE_AXIS));
+
+        linkContainer.add(initInputSearchSite());
+
+        return linkContainer;
     }
 
     private JPanel initResurseCrestineOptions(){
@@ -81,6 +90,32 @@ public class GeneratorApp extends JFrame {
         fileContainer.add(initOutputFile());
 
         return fileContainer;
+    }
+
+    private JPanel initInputSearchSite(){
+        JPanel inputFileContainer = new JPanel();
+        inputFileContainer.setLayout(new FlowLayout());
+        JLabel inputFileLabel = new JLabel("Search resurse crestine:");
+        searchWebsiteInputField = new JTextField();
+        searchWebsiteInputField.setPreferredSize(new Dimension(300, 20));
+        JButton linkButton = new JButton("Search");
+        linkButton.addActionListener(e->{
+            String text = searchWebsiteInputField.getText();
+            String textFromSite = SeleniumResurseCrestine.getSongTextFromSearchResurseCrestine(text);
+            if(textFromSite == null) {
+                JOptionPane.showMessageDialog(null, "Nothing found/ Nu s-a gasit pe resurse crestine!");
+                return;
+            } else {
+                versesTextArea.setText(textFromSite);
+            }
+
+        });
+
+        inputFileContainer.add(inputFileLabel);
+        inputFileContainer.add(searchWebsiteInputField);
+        inputFileContainer.add(linkButton);
+
+        return inputFileContainer;
     }
 
     private JPanel initInputWebSite(){
