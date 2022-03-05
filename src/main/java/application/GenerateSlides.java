@@ -1,6 +1,7 @@
 package application;
 
 import application.helper.Constants;
+import com.microsoft.playwright.*;
 import org.apache.poi.common.usermodel.fonts.FontGroup;
 import org.apache.poi.sl.usermodel.TextParagraph;
 import org.apache.poi.sl.usermodel.VerticalAlignment;
@@ -11,12 +12,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.awt.*;
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import static application.helper.Constants.*;
 import static application.helper.HelperClass.*;
+
 
 
 @SpringBootApplication
@@ -68,11 +71,21 @@ public class GenerateSlides {
 
     }
 
+    /*
+        public static String getSongTextFromResurseCrestine(String link){
 
-    public static void main(String[] args) throws IOException {
+        driver.get(link);
+        WebElement element = driver.findElement(By.className("resized-text"));
+
+        return element.getText();
+    }
+
+     */
+
+    public static void main(String[] args) {
 
         SpringApplication.run(GenerateSlides.class, args);
-        slashUpdate();
+//        slashUpdate();
 
         //Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 

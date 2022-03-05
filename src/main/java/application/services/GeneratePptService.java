@@ -22,6 +22,21 @@ import static application.helper.HelperClass.createSolidFillLineProperties;
 @Service
 public class GeneratePptService {
 
+    public static final String R_1 = "R1";
+    public static final String R_2 = "R2";
+
+    public byte[] createPPTFileFromLink(String text, int width, int height ) throws IOException {
+        List<String> updateSplit = splitTextByVerses(text,false);
+
+        String pptFile = OUTPUT_FOLDER + "testLink.pptx";
+                //pptTitle;
+
+        createNewPpt(updateSplit, pptFile, false, width, height);
+
+        InputStream fileInputStream = new FileInputStream(pptFile);
+        return fileInputStream.readAllBytes();
+    }
+
     public byte[] createPPTFile(MultipartFile multipartFile, int width,int height) throws IOException {
 
         String name = multipartFile.getOriginalFilename();
@@ -54,7 +69,9 @@ public class GeneratePptService {
 
         int lengthSplitText = splitText.length;
         for (int i = 0; i < lengthSplitText; i++) {
-            if (splitText[i].startsWith(R)) { // the following verse is a chorus
+            if (splitText[i].startsWith(R)||
+                    splitText[i].startsWith(R_1)||
+                    splitText[i].startsWith(R_2)) { // the following verse is a chorus
                 // the first encounter of a chorus
                 if (firstIndexChorus == -1) {
                     firstIndexChorus = i;
