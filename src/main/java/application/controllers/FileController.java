@@ -45,7 +45,6 @@ public class FileController {
                                                @RequestParam("outlineValue")  float outlineValue,
                                                @RequestParam("outlineColor")  String outlineColor,
                                                @RequestParam("backgroundColor")  String background)
-
     {
 
         try{
@@ -66,6 +65,7 @@ public class FileController {
                     .body(null);
         }
     }
+
     @PostMapping(path="/link", produces = {"application/octet-stream"})
     public ResponseEntity<Resource> getFromLink (@RequestParam("url") String url,
                                                  @RequestParam("width") int width,
@@ -77,7 +77,6 @@ public class FileController {
                                                  @RequestParam("outlineValue")  float outlineValue,
                                                  @RequestParam("outlineColor")  String outlineColor,
                                                  @RequestParam("backgroundColor")  String background)
-
     {
 
         //String link ="https://www.resursecrestine.ro/cantece/65663/cred-in-dumnezeu-ca-tata";
@@ -88,7 +87,40 @@ public class FileController {
 
             Resource resource = new ByteArrayResource(pptFile);
 
+            return ResponseEntity
+                    .ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(resource);
 
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+
+
+    }
+
+    @PostMapping(path="/search", produces = {"application/octet-stream"})
+    public ResponseEntity<Resource> getFromSearch(@RequestParam("url") String url,
+                                                 @RequestParam("width") int width,
+                                                 @RequestParam("height") int height,
+                                                 @RequestParam("textSize") float textSize,
+                                                 @RequestParam("textColor") String textColor,
+                                                 @RequestParam("glowValue")float glowValue,
+                                                 @RequestParam("glowColor") String glowColor,
+                                                 @RequestParam("outlineValue")  float outlineValue,
+                                                 @RequestParam("outlineColor")  String outlineColor,
+                                                 @RequestParam("backgroundColor")  String background)
+    {
+
+        try {
+
+            String text = playwrightService.getTextFromSearchResuseCrestine(url);
+            byte[] pptFile = generatePptService.createPPTFileFromLink(text, width, height);
+
+            Resource resource = new ByteArrayResource(pptFile);
 
             return ResponseEntity
                     .ok()

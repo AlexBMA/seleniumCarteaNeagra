@@ -34,5 +34,14 @@ public class PlaywrightService {
         return innerHTML.replace(BR_BR, "\n\r\n\r").replace(BR, REPLACEMENT);
     }
 
+    public String getTextFromSearchResuseCrestine(String text){
+        Page page = browser.newPage();
+        page.navigate("https://www.resursecrestine.ro/cauta/"+text.replace(" ","+")+"/2/titlu/sorteaza/vizualizari");
+
+        Locator locator = page.locator("//html/body/div[1]/div[1]/div[2]/div[1]/div[4]/div[1]/div/div[1]/div[1]/a");
+
+        String href = locator.getAttribute("href");
+        return getTextFromLinkResurseCrestine(href);
+    }
 
 }
