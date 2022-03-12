@@ -1,15 +1,12 @@
 package application.controllers;
 
+import application.dto.OptionInputDTO;
 import application.services.GeneratePptService;
 import application.services.PlaywrightService;
-import com.microsoft.playwright.Browser;
-import com.microsoft.playwright.Locator;
-import com.microsoft.playwright.Page;
-import com.microsoft.playwright.Playwright;
+import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,29 +23,27 @@ public class FileController {
 
     private GeneratePptService generatePptService;
     private PlaywrightService playwrightService;
+    private Gson gson;
 
     @Autowired
     public FileController(GeneratePptService generatePptService, PlaywrightService playwrightService)
     {
         this.generatePptService = generatePptService;
         this.playwrightService = playwrightService;
+        gson = new Gson();
     }
+
+
 
     @PostMapping(path="/upload", produces = {"application/octet-stream"})
     public ResponseEntity<Resource> uploadFile(@RequestParam("file") MultipartFile multipartFile,
-                                               @RequestParam("width")int width,
-                                               @RequestParam("height") int height,
-                                               @RequestParam("textSize") float textSize,
-                                               @RequestParam("textColor") String textColor,
-                                               @RequestParam("glowValue")float glowValue,
-                                               @RequestParam("glowColor") String glowColor,
-                                               @RequestParam("outlineValue")  float outlineValue,
-                                               @RequestParam("outlineColor")  String outlineColor,
-                                               @RequestParam("backgroundColor")  String background)
+                                               @RequestParam("options") String options)
     {
 
         try{
-            byte[] pptFile = generatePptService.createPPTFile(multipartFile, width, height);
+            OptionInputDTO optionInputDTO = gson.fromJson(options, OptionInputDTO.class);
+
+            byte[] pptFile = generatePptService.createPPTFile(multipartFile, optionInputDTO);
 
             Resource resource = new ByteArrayResource(pptFile);
 
@@ -68,22 +63,15 @@ public class FileController {
 
     @PostMapping(path="/link", produces = {"application/octet-stream"})
     public ResponseEntity<Resource> getFromLink (@RequestParam("url") String url,
-                                                 @RequestParam("width") int width,
-                                                 @RequestParam("height") int height,
-                                                 @RequestParam("textSize") float textSize,
-                                                 @RequestParam("textColor") String textColor,
-                                                 @RequestParam("glowValue")float glowValue,
-                                                 @RequestParam("glowColor") String glowColor,
-                                                 @RequestParam("outlineValue")  float outlineValue,
-                                                 @RequestParam("outlineColor")  String outlineColor,
-                                                 @RequestParam("backgroundColor")  String background)
+                                                 @RequestParam("options") String options)
     {
 
         //String link ="https://www.resursecrestine.ro/cantece/65663/cred-in-dumnezeu-ca-tata";
         try {
+            OptionInputDTO optionInputDTO = gson.fromJson(options, OptionInputDTO.class);
 
             String text = playwrightService.getTextFromLinkResurseCrestine(url);
-            byte[] pptFile = generatePptService.createPPTFileFromLink(text, width, height);
+            byte[] pptFile = generatePptService.createPPTFileFromLink(text, optionInputDTO);
 
             Resource resource = new ByteArrayResource(pptFile);
 
@@ -104,21 +92,14 @@ public class FileController {
 
     @PostMapping(path="/search", produces = {"application/octet-stream"})
     public ResponseEntity<Resource> getFromSearch(@RequestParam("url") String url,
-                                                 @RequestParam("width") int width,
-                                                 @RequestParam("height") int height,
-                                                 @RequestParam("textSize") float textSize,
-                                                 @RequestParam("textColor") String textColor,
-                                                 @RequestParam("glowValue")float glowValue,
-                                                 @RequestParam("glowColor") String glowColor,
-                                                 @RequestParam("outlineValue")  float outlineValue,
-                                                 @RequestParam("outlineColor")  String outlineColor,
-                                                 @RequestParam("backgroundColor")  String background)
+                                                  @RequestParam("options") String options)
     {
 
         try {
+            OptionInputDTO optionInputDTO = gson.fromJson(options, OptionInputDTO.class);
 
             String text = playwrightService.getTextFromSearchResuseCrestine(url);
-            byte[] pptFile = generatePptService.createPPTFileFromLink(text, width, height);
+            byte[] pptFile = generatePptService.createPPTFileFromLink(text, optionInputDTO);
 
             Resource resource = new ByteArrayResource(pptFile);
 

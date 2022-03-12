@@ -1,5 +1,6 @@
 package application.services;
 
+import application.dto.OptionInputDTO;
 import org.apache.poi.common.usermodel.fonts.FontGroup;
 import org.apache.poi.sl.usermodel.TextParagraph;
 import org.apache.poi.sl.usermodel.VerticalAlignment;
@@ -25,19 +26,19 @@ public class GeneratePptService {
     public static final String R_1 = "R1";
     public static final String R_2 = "R2";
 
-    public byte[] createPPTFileFromLink(String text, int width, int height ) throws IOException {
+    public byte[] createPPTFileFromLink(String text, OptionInputDTO optionInputDTO ) throws IOException {
         List<String> updateSplit = splitTextByVerses(text,false);
 
         String pptFile = OUTPUT_FOLDER + "testLink.pptx";
                 //pptTitle;
 
-        createNewPpt(updateSplit, pptFile, false, width, height);
+        createNewPpt(updateSplit, pptFile, false, optionInputDTO);
 
         InputStream fileInputStream = new FileInputStream(pptFile);
         return fileInputStream.readAllBytes();
     }
 
-    public byte[] createPPTFile(MultipartFile multipartFile, int width,int height) throws IOException {
+    public byte[] createPPTFile(MultipartFile multipartFile, OptionInputDTO optionInputDTO) throws IOException {
 
         String name = multipartFile.getOriginalFilename();
         System.err.println(name);
@@ -53,10 +54,11 @@ public class GeneratePptService {
 
         String pptFile = OUTPUT_FOLDER + pptTitle;
 
-        createNewPpt(updateSplit, pptFile, false, width, height);
+        createNewPpt(updateSplit, pptFile, false, optionInputDTO);
 
         InputStream fileInputStream = new FileInputStream(pptFile);
         return fileInputStream.readAllBytes();
+
     }
 
     private List<String> splitTextByVerses(String text, boolean lowerThird) {
@@ -134,24 +136,28 @@ public class GeneratePptService {
         return listOfVerses;
     }
 
-    private void createNewPpt(List<String> updateSplit, String fileName, boolean lowerThird, int width, int height) throws IOException {
-//        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-//        double width = screenSize.getWidth();
-//        double height = screenSize.getHeight();
+    private void createNewPpt(List<String> updateSplit, String fileName, boolean lowerThird, OptionInputDTO optionInputDTO) throws IOException {
 
         XMLSlideShow ppt = new XMLSlideShow();
+        int width = Integer.parseInt(optionInputDTO.getWidth());
+        int height = Integer.parseInt(optionInputDTO.getHeight());
         ppt.setPageSize(new Dimension(width, height));
 
         XSLFSlideMaster defaultMaster = ppt.getSlideMasters().get(0);
-        defaultMaster.getBackground().setFillColor(new Color(RED, GREEN, BLUE));
+        Color backgroundColor =  Color.decode(optionInputDTO.getBackgroundColor());
+        defaultMaster.getBackground().setFillColor(backgroundColor);
 
         XSLFSlideLayout layout = defaultMaster.getLayout(SlideLayout.BLANK);
+
+        Color colorFont = Color.decode(optionInputDTO.getTextColor());
+        Color colorOutline = Color.decode(optionInputDTO.getOutlineColor());
+        Color colorGlow = Color.decode(optionInputDTO.getGlowColor());
 
         int length = updateSplit.size();
         if (length > 0) {
 
             for (String s : updateSplit) {
-                addOptionToSlide(s, new Rectangle((int) width, (int) height), ppt.createSlide(layout), lowerThird);
+                addOptionToSlide(s, new Rectangle(width, height), ppt.createSlide(layout), lowerThird, colorFont, Double.parseDouble(optionInputDTO.getTextSize()), Double.parseDouble(optionInputDTO.getOutlineValue()), colorOutline, colorGlow, Double.parseDouble(optionInputDTO.getGlowValue()));
             }
 
         }
@@ -162,7 +168,7 @@ public class GeneratePptService {
         out.close();
     }
 
-    private void addOptionToSlide(String s, Rectangle anchor, XSLFSlide slide1, boolean lowerThird) {
+    private void addOptionToSlide(String s, Rectangle anchor, XSLFSlide slide1, boolean lowerThird, Color color, double fontSize, double outlineWeight, Color outlineColor, Color glowColor, double radiusPt) {
         XSLFTextBox shape = slide1.createTextBox();
         shape.setAnchor(anchor);
 
@@ -184,10 +190,10 @@ public class GeneratePptService {
         }
 
         r.setText(s.trim());
-        r.setFontColor(Color.WHITE);
-        r.setFontSize(FONT_SIZE);
+        r.setFontColor(color);
+        r.setFontSize(fontSize);
         r.setBold(true);
-        setOutlineAndGlow(r, createSolidFillLineProperties(java.awt.Color.BLACK, OUTLINE_WEIGHT), createGlow(java.awt.Color.BLACK, RADIUS_PT));
+        setOutlineAndGlow(r, createSolidFillLineProperties(outlineColor, outlineWeight), createGlow(glowColor, radiusPt));
 
         r.setFontFamily(CALIBRI, FontGroup.LATIN); // or CALIBRI_LIGHT
     }
