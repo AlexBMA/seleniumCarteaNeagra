@@ -1,0 +1,22 @@
+/*.container{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+   width: 300px;
+   height: 500px;
+   margin: auto;
+ } 
+*/
+
+.container{
+  align-content: center;
+}
+
+.file-input {
+  display: none;
+}
+
+
+span{
+  margin-right: 20px;
+}
