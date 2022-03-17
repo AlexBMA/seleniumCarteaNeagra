@@ -71,7 +71,7 @@ public class GeneratorApp extends JFrame {
 
     private JPanel initResurseCrestineOptions(){
         JPanel linkContainer = new JPanel();
-        Border textContainerBorder = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black, 5) ,"File options");
+        Border textContainerBorder = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black, 5) ,"Link Option");
         linkContainer.setBorder(textContainerBorder);
         linkContainer.setLayout(new BoxLayout(linkContainer, BoxLayout.PAGE_AXIS));
 
