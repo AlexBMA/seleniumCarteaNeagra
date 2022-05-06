@@ -6,13 +6,18 @@ import org.apache.poi.xslf.usermodel.XSLFTextRun;
 
 import javax.swing.*;
 import javax.swing.border.Border;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static main.SeleniumResurseCrestine.closeSelenium;
 import static main.SeleniumResurseCrestine.initSelenium;
@@ -50,6 +55,38 @@ public class GeneratorApp extends JFrame {
         pane.add(initSlideOptions());
         pane.add(initTextOptions());
         pane.add(initGenerateButton());
+
+        versesTextArea.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                if (versesTextArea.getText().length() == 0)
+                    outputFileTextField.setText("");    
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                if (outputFileTextField.getText().length() == 0) {
+
+                    String lyrics = versesTextArea.getText();
+                    Pattern pattern = Pattern.compile("[a-zA-ZăţțşșîâĂÂÎŢȚŞȘ-]+");
+                    Matcher matcher = pattern.matcher(lyrics);
+
+                    int nWordsInTitle = 3;
+                    List<String> titleWords = new ArrayList<>();
+                    while(matcher.find() && nWordsInTitle > 0) {
+                       titleWords.add(matcher.group());
+                       nWordsInTitle--; 
+                    }
+
+                    outputFileTextField.setText(String.join("_", titleWords) + ".pptx");
+                }
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                // keep empty, it doesn't work on plain text elements
+            }
+        });
 
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
@@ -387,6 +424,9 @@ public class GeneratorApp extends JFrame {
         }
 
         File outputFilePath = new File(outputFileTextField.getText());
+
+        if (!outputFilePath.isAbsolute())
+            outputFilePath = new File(outputFilePath.getAbsolutePath());
 
         if (!new File(outputFilePath.getParent()).exists()) {
             JOptionPane.showMessageDialog(null, "The containing directory doesn't exist!");
