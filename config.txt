@@ -1,0 +1,9 @@
+fontName=Calibri
+fontSize=100
+outlineWidth=1.5
+glowRadius=10
+fontColor=#FFFFFF
+outlineColor=#000000
+glowColor=#000000
+backgroundColor=#052D26
+defaultFolderPath=..

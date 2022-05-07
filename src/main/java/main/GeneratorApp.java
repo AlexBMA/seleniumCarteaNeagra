@@ -11,11 +11,13 @@ import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,12 +32,40 @@ public class GeneratorApp extends JFrame {
     JTextField inputFileTextField, outputFileTextField, linkInputField, searchWebsiteInputField;
     List<String> verseList;
 
-    final String FONTNAME = "Calibri";
+    final String FONTNAME, FOLDER_DEFAULT_PATH;
     final FontGroup FONTGROUP = FontGroup.LATIN;
-    final double FONT_SIZE = 60, OUTLINE_WIDTH = 1.5, GLOW_RADIUS = 2;
-    final Color FONT_COLOR = Color.white, OUTLINE_COLOR = Color.black, GLOW_COLOR = Color.black, BACKGROUND_COLOR = new Color(5, 45 ,38);
+    final double FONT_SIZE, OUTLINE_WIDTH, GLOW_RADIUS;
+    final Color FONT_COLOR, OUTLINE_COLOR, GLOW_COLOR, BACKGROUND_COLOR;
 
     public GeneratorApp() {
+        String tempFontName, tempFontColor, tempOutlineColor, tempGlowColor, tempBackgroundColor, tempFolderPath;
+        double tempFontSize, tempOutlineWidth, tempGlowRadius;
+
+        Properties prop = new Properties();
+        try (FileInputStream fis = new FileInputStream("config.txt")) {
+            prop.load(fis);
+            tempFontName = prop.getOrDefault("fontName", "Calibri").toString();
+            tempFontSize = Double.parseDouble(prop.getOrDefault("fontSize", "60").toString());
+            tempOutlineWidth = Double.parseDouble(prop.getOrDefault("outlineWidth", "1.5").toString());
+            tempGlowRadius = Double.parseDouble(prop.getOrDefault("glowRadius", "2").toString());
+            tempFontColor = prop.getOrDefault("fontColor", "#FFFFFF").toString();
+            tempOutlineColor = prop.getOrDefault("outlineColor", "#000000").toString();
+            tempGlowColor = prop.getOrDefault("glowColor", "#000000").toString();
+            tempBackgroundColor = prop.getOrDefault("backgroundColor", "#052D26").toString();
+            tempFolderPath = prop.getOrDefault("defaultFolderPath", ".").toString();
+        } catch (IOException ignored) {
+            tempFontName = "Calibri";
+            tempFontSize = 60; tempOutlineWidth = 1.5; tempGlowRadius = 2;
+            tempFontColor = "#FFFFFF"; tempOutlineColor = "#000000"; tempGlowColor = "#000000"; tempBackgroundColor = "#052D26";
+            tempFolderPath = ".";
+        }
+        FONTNAME = tempFontName; FOLDER_DEFAULT_PATH = tempFolderPath;
+        FONT_SIZE = tempFontSize; OUTLINE_WIDTH = tempOutlineWidth; GLOW_RADIUS = tempGlowRadius;
+        FONT_COLOR = Color.decode(tempFontColor);
+        OUTLINE_COLOR = Color.decode(tempOutlineColor);
+        GLOW_COLOR = Color.decode(tempGlowColor);
+        BACKGROUND_COLOR = Color.decode(tempBackgroundColor);
+
         init();
     }
 
@@ -48,7 +78,7 @@ public class GeneratorApp extends JFrame {
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        pane.add(initCautaInResuseRestineOptions());
+        pane.add(initCautaInResurseRestineOptions());
         pane.add(initResurseCrestineOptions());
         pane.add(initFileOptions());
         pane.add(initTextArea());
@@ -95,7 +125,7 @@ public class GeneratorApp extends JFrame {
             }
         });
     }
-    private JPanel initCautaInResuseRestineOptions(){
+    private JPanel initCautaInResurseRestineOptions(){
         JPanel linkContainer = new JPanel();
         Border textContainerBorder = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black, 5) ,"Search options");
         linkContainer.setBorder(textContainerBorder);
@@ -141,7 +171,6 @@ public class GeneratorApp extends JFrame {
             String textFromSite = SeleniumResurseCrestine.getSongTextFromSearchResurseCrestine(text);
             if(textFromSite == null) {
                 JOptionPane.showMessageDialog(null, "Nothing found/ Nu s-a gasit pe resurse crestine!");
-                return;
             } else {
                 versesTextArea.setText(textFromSite);
             }
@@ -425,8 +454,9 @@ public class GeneratorApp extends JFrame {
 
         File outputFilePath = new File(outputFileTextField.getText());
 
-        if (!outputFilePath.isAbsolute())
-            outputFilePath = new File(outputFilePath.getAbsolutePath());
+        if (!outputFilePath.isAbsolute()) {
+            outputFilePath = new File(new File(FOLDER_DEFAULT_PATH).getAbsolutePath(), outputFilePath.toString());
+        }
 
         if (!new File(outputFilePath.getParent()).exists()) {
             JOptionPane.showMessageDialog(null, "The containing directory doesn't exist!");
