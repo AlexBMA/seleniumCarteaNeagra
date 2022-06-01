@@ -140,16 +140,19 @@ public class SlideGenerator {
 
         XSLFTextRun textRun = textParagraph.addNewTextRun();
 
-        if (slideText.trim().startsWith("R:")) {
+        if (slideText!=null && slideText.trim().startsWith("R:")) {
             textRun.setItalic(true);
             slideText = slideText.trim().substring(2);
         }
 
-        textRun.setText(slideText.trim());
-        textRun.setFontColor(textColor);
-        textRun.setFontSize(fontSize);
-        textRun.setBold(true);
-        textRun.setFontFamily(fontTypeFace, fontGroup);
+        if(slideText!=null){
+            textRun.setText(slideText.trim());
+            textRun.setFontColor(textColor);
+            textRun.setFontSize(fontSize);
+            textRun.setBold(true);
+            textRun.setFontFamily(fontTypeFace, fontGroup);
+
+        }
 
         return textRun;
     }

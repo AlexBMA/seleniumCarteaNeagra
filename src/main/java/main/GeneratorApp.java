@@ -1,6 +1,9 @@
 package main;
 
 import org.apache.poi.common.usermodel.fonts.FontGroup;
+import org.apache.poi.hslf.usermodel.HSLFSlide;
+import org.apache.poi.hslf.usermodel.HSLFSlideShow;
+import org.apache.poi.xslf.usermodel.XMLSlideShow;
 import org.apache.poi.xslf.usermodel.XSLFSlide;
 import org.apache.poi.xslf.usermodel.XSLFTextRun;
 
@@ -10,16 +13,20 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static main.SeleniumResurseCrestine.closeSelenium;
 import static main.SeleniumResurseCrestine.initSelenium;
@@ -29,7 +36,7 @@ public class GeneratorApp extends JFrame {
     JSpinner fontSizeSpinner, outlineWidthSpinner, glowRadiusSpinner;
     JTextArea versesTextArea;
     JCheckBox lowerThirdCheckBox;
-    JTextField inputFileTextField, outputFileTextField, linkInputField, searchWebsiteInputField;
+    JTextField inputFileTextField, outputFileTextField, linkInputField, searchWebsiteInputField, inputFolderTextField, outputFolderTextField;
     List<String> verseList;
 
     final String FONTNAME, FOLDER_DEFAULT_PATH;
@@ -71,26 +78,44 @@ public class GeneratorApp extends JFrame {
 
     private void init() {
         Container pane = getContentPane();
-        pane.setLayout(new BoxLayout(pane, BoxLayout.PAGE_AXIS));
+        JTabbedPane jTabbedPane = new JTabbedPane();
+        jTabbedPane.setVisible(true);
+        pane.add(jTabbedPane);
 
+        JPanel jp1 = new JPanel();
+
+        jTabbedPane.addTab("Presentation",null,jp1,"Presentation Tab");
+
+        jp1.setLayout(new BoxLayout(jp1, BoxLayout.PAGE_AXIS));
         setTitle("PowerPoint Generator App");
         setBounds(400, 200, 600, 600);
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        pane.add(initCautaInResurseRestineOptions());
-        pane.add(initResurseCrestineOptions());
-        pane.add(initFileOptions());
-        pane.add(initTextArea());
-        pane.add(initSlideOptions());
-        pane.add(initTextOptions());
-        pane.add(initGenerateButton());
+        jp1.add(initCautaInResurseRestineOptions());
+        jp1.add(initResurseCrestineOptions());
+        jp1.add(initFileOptions());
+        jp1.add(initTextArea());
+        jp1.add(initSlideOptions());
+        jp1.add(initTextOptions());
+        jp1.add(initGenerateSlideButton());
+
+
+        JPanel jp2 = new JPanel();
+
+        jTabbedPane.addTab("Directory",null,jp2,"Directory options");
+        jp2.setLayout(new BoxLayout(jp2, BoxLayout.PAGE_AXIS));
+
+        jp2.add(intFolderOptions());
+        jp2.add(initSlideOptions());
+        jp2.add(initTextOptions());
+        jp2.add(initGenerateSlideForFolderButton());
 
         versesTextArea.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void removeUpdate(DocumentEvent e) {
                 if (versesTextArea.getText().length() == 0)
-                    outputFileTextField.setText("");    
+                    outputFileTextField.setText("");
             }
 
             @Override
@@ -105,7 +130,7 @@ public class GeneratorApp extends JFrame {
                     List<String> titleWords = new ArrayList<>();
                     while(matcher.find() && nWordsInTitle > 0) {
                        titleWords.add(matcher.group());
-                       nWordsInTitle--; 
+                       nWordsInTitle--;
                     }
 
                     outputFileTextField.setText(String.join("_", titleWords) + ".pptx");
@@ -125,6 +150,21 @@ public class GeneratorApp extends JFrame {
             }
         });
     }
+
+    private Component intFolderOptions() {
+        JPanel fileContainer = new JPanel();
+
+        Border textContainerBorder = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black, 5) ,"Folder options");
+        fileContainer.setBorder(textContainerBorder);
+        fileContainer.setLayout(new BoxLayout(fileContainer, BoxLayout.PAGE_AXIS));
+
+
+        fileContainer.add(initFolderOptions());
+        fileContainer.add(initOutputFolder());
+
+        return fileContainer;
+    }
+
     private JPanel initCautaInResurseRestineOptions(){
         JPanel linkContainer = new JPanel();
         Border textContainerBorder = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black, 5) ,"Search options");
@@ -205,6 +245,23 @@ public class GeneratorApp extends JFrame {
         return inputFileContainer;
     }
 
+    private JPanel initFolderOptions(){
+        JPanel inputFileContainer = new JPanel();
+        inputFileContainer.setLayout(new FlowLayout());
+
+        JLabel inputFileLabel = new JLabel("Input Folder:");
+        inputFolderTextField = new JTextField();
+        inputFolderTextField.setPreferredSize(new Dimension(300, 20));
+        JButton inputFileButton = new JButton("Choose input Folder");
+        inputFileButton.addActionListener(e -> readDirectory());
+
+        inputFileContainer.add(inputFileLabel);
+        inputFileContainer.add(inputFolderTextField);
+        inputFileContainer.add(inputFileButton);
+
+        return inputFileContainer;
+    }
+
     private JPanel initInputFile() {
         JPanel inputFileContainer = new JPanel();
         inputFileContainer.setLayout(new FlowLayout());
@@ -220,6 +277,23 @@ public class GeneratorApp extends JFrame {
         inputFileContainer.add(inputFileButton);
 
         return inputFileContainer;
+    }
+
+    private JPanel initOutputFolder() {
+        JPanel outputFileContainer = new JPanel();
+        outputFileContainer.setLayout(new FlowLayout());
+
+        JLabel outputFileLabel = new JLabel("Output folder:");
+        outputFolderTextField = new JTextField();
+        outputFolderTextField.setPreferredSize(new Dimension(300, 20));
+        JButton outputFileButton = new JButton("Choose output folder");
+        outputFileButton.addActionListener(e -> writeDirectory());
+
+        outputFileContainer.add(outputFileLabel);
+        outputFileContainer.add(outputFolderTextField);
+        outputFileContainer.add(outputFileButton);
+
+        return outputFileContainer;
     }
 
     private JPanel initOutputFile() {
@@ -383,7 +457,19 @@ public class GeneratorApp extends JFrame {
         return glowPanel;
     }
 
-    private JPanel initGenerateButton() {
+    private JPanel initGenerateSlideForFolderButton() {
+        JButton generatePptButton = new JButton("Generate ppt for folder!");
+
+        generatePptButton.addActionListener(e -> generatePptFolder());
+
+        JPanel generatePanel = new JPanel();
+        generatePanel.setLayout(new FlowLayout());
+        generatePanel.add(generatePptButton);
+
+        return generatePanel;
+    }
+
+    private JPanel initGenerateSlideButton() {
         JButton generatePptButton = new JButton("Generate ppt!");
         generatePptButton.addActionListener(e -> generatePpt());
 
@@ -392,6 +478,52 @@ public class GeneratorApp extends JFrame {
         generatePanel.add(generatePptButton);
 
         return generatePanel;
+    }
+
+    private void writeDirectory(){
+        JFileChooser inputFileChooser = new JFileChooser();
+        int result = inputFileChooser.showOpenDialog(this);
+        inputFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        inputFileChooser.showSaveDialog(null);
+        inputFileChooser.setAcceptAllFileFilterUsed(false);
+        if (result == JFileChooser.CANCEL_OPTION)
+            return;
+
+        File selectedFile = inputFileChooser.getSelectedFile();
+
+        if (!selectedFile.exists()) {
+            JOptionPane.showMessageDialog(null, "The folder file doesn't exist!");
+            return;
+        }
+
+        if (selectedFile.isDirectory()) {
+            outputFolderTextField.setText(selectedFile.toString());
+            System.out.println(selectedFile.toString());
+        }
+    }
+
+    private void readDirectory(){
+        JFileChooser inputFileChooser = new JFileChooser();
+        int result = inputFileChooser.showOpenDialog(this);
+        inputFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        inputFileChooser.showSaveDialog(null);
+        inputFileChooser.setAcceptAllFileFilterUsed(false);
+        if (result == JFileChooser.CANCEL_OPTION)
+            return;
+
+        File selectedFile = inputFileChooser.getSelectedFile();
+
+        if (!selectedFile.exists()) {
+            JOptionPane.showMessageDialog(null, "The input folder doesn't exist!");
+            return;
+        }
+
+        if (selectedFile.isDirectory()) {
+            inputFolderTextField.setText(selectedFile.toString());
+            System.out.println(selectedFile.toString());
+        }else {
+            System.out.println("something else");
+        }
     }
 
     private void readFromFile() {
@@ -421,6 +553,7 @@ public class GeneratorApp extends JFrame {
             e.printStackTrace();
         }
     }
+
 
     private void generatePpt() {
         String verseText = versesTextArea.getText().replace("\r", "");
@@ -488,11 +621,114 @@ public class GeneratorApp extends JFrame {
         // JOptionPane.showMessageDialog(null, "Done!");
     }
 
+    private void generatePptFolder() {
+
+        Stream<Path> paths = null;
+        try {
+            paths = Files.walk(Paths.get(inputFolderTextField.getText()));
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Invalid path to folder!");
+            return;
+        }
+        List<Path> fileNames = paths
+                                .filter(item -> item.toString().endsWith("ppt") || item.toString().endsWith("pps"))
+                                .collect(Collectors.toList());
+
+        String outputFolder = outputFolderTextField.getText();
+
+        for (Path itemPath : fileNames) {
+            InputStream inputStream = null;
+            String pathToString = itemPath.toString();
+
+            try {
+
+                int lastIndexOfSlash = pathToString.lastIndexOf("\\");
+                String pptName = pathToString.substring(lastIndexOfSlash)
+                        .replace("ppt", "pptx")
+                        .replace("pps", "pptx");
+
+                //System.out.println(itemPath);
+                inputStream = new FileInputStream(itemPath.toFile());
+                HSLFSlideShow ppt = new HSLFSlideShow(inputStream);
+
+                List<HSLFSlide> slides = ppt.getSlides();
+                List<String> verses = new ArrayList<>();
+                slides.forEach(item -> {
+                    if (item.getTitle() != null && !item.getTitle().isBlank()) {
+                        verses.add(item.getTitle());
+                    } else {
+                        String updateText = item.getTextParagraphs().toString()
+                                .replace("[]", "")
+                                .replace("[[", "")
+                                .replace("]]", "")
+                                .replace("[","")
+                                .replace("]","")
+                                .replace(",", "")
+                                .trim();
+
+                        if(!updateText.isBlank())
+                            verses.add(updateText);
+                    }
+                });
+
+                boolean lowerThird = lowerThirdCheckBox.isSelected();
+
+                if (lowerThird)
+                    verseList = SlideGenerator.createSubtitles(verseList);
+
+                SlideGenerator.createPpt();
+
+                Color slideBackgroundColor = backgroundColorDisplay.getBackground();
+                SlideGenerator.setBackground(slideBackgroundColor.getRed(), slideBackgroundColor.getGreen(), slideBackgroundColor.getBlue());
+
+                Color fontColor = fontColorDisplay.getBackground();
+                Color outlineColor = outlineColorDisplay.getBackground();
+                Color glowColor = glowColorDisplay.getBackground();
+                double fontSize = (double) fontSizeSpinner.getValue();
+                double outlineWidth = (double) outlineWidthSpinner.getValue();
+                double glowRadius = (double) glowRadiusSpinner.getValue();
+
+                if (outputFolder.length() == 0) {
+                    JOptionPane.showMessageDialog(null, "The output file path is empty!");
+                    continue;
+                }
+
+                for (String verse : verses) {
+                    XSLFSlide slide = SlideGenerator.addSlide();
+                    XSLFTextRun textRun = SlideGenerator.addText(slide, verse, fontColor, fontSize, FONTNAME, FONTGROUP, lowerThird);
+                    SlideGenerator.addGlow(textRun, glowRadius, glowColor.getRed(), glowColor.getGreen(), glowColor.getBlue());
+                    SlideGenerator.addOutline(textRun, outlineWidth, outlineColor.getRed(), outlineColor.getGreen(), outlineColor.getBlue());
+                }
+
+                SlideGenerator.addSlide();
+
+                SlideGenerator.savePpt(outputFolder + pptName);
+            } catch (Exception e) {
+                System.out.println(pathToString);
+                e.printStackTrace();
+
+            }
+
+
+        }
+
+
+        JOptionPane.showMessageDialog(null, "Done folder conversion!");
+        Desktop desktop = Desktop.getDesktop();
+        try {
+            desktop.open(new File(outputFolder));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
         initSelenium();
         EventQueue.invokeLater(() -> {
             var genApp = new GeneratorApp();
             genApp.setVisible(true);
         });
+
+
     }
 }
