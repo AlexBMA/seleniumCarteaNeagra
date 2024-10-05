@@ -3,9 +3,7 @@ package main;
 import org.apache.poi.common.usermodel.fonts.FontGroup;
 import org.apache.poi.hslf.usermodel.HSLFSlide;
 import org.apache.poi.hslf.usermodel.HSLFSlideShow;
-import org.apache.poi.xslf.usermodel.XMLSlideShow;
-import org.apache.poi.xslf.usermodel.XSLFSlide;
-import org.apache.poi.xslf.usermodel.XSLFTextRun;
+import org.apache.poi.xslf.usermodel.*;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -17,15 +15,10 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static main.SeleniumResurseCrestine.closeSelenium;
@@ -630,12 +623,87 @@ public class GeneratorApp extends JFrame {
             JOptionPane.showMessageDialog(null, "Invalid path to folder!");
             return;
         }
-        List<Path> fileNames = paths
-                                .filter(item -> item.toString().endsWith("ppt") || item.toString().endsWith("pps"))
-                                .collect(Collectors.toList());
+
+        List<Path> listPptx = new LinkedList<>();
+        List<Path> listPps = new LinkedList<>();
+
+        paths.forEach(item-> filterPaths(item, listPptx, listPps));
 
         String outputFolder = outputFolderTextField.getText();
 
+        generateForFirstList(listPps, outputFolder);
+
+        generateForSecondList(listPptx, outputFolder);
+
+        JOptionPane.showMessageDialog(null, "Done folder conversion!");
+        Desktop desktop = Desktop.getDesktop();
+        try {
+            desktop.open(new File(outputFolder));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void filterPaths(Path item, List<Path> listPptx, List<Path> listPps) {
+        Path fileName = item.getFileName();
+        String stringVersion = fileName.toString();
+        if(stringVersion.endsWith("pptx")) {
+            listPptx.add(item);
+        }
+        if(stringVersion.endsWith("ppt")|| stringVersion.endsWith("pps")){
+            listPps.add(item);
+        }
+    }
+
+    private void generateForSecondList(List<Path> fileNamesPptx, String outputFolder) {
+        for (Path itemPath : fileNamesPptx) {
+            InputStream inputStream = null;
+            String pathToString = itemPath.toString();
+            //System.out.println(pathToString);
+            try {
+
+                int lastIndexOfSlash = pathToString.lastIndexOf("\\");
+                String pptName = pathToString.substring(lastIndexOfSlash);
+
+                inputStream = new FileInputStream(itemPath.toFile());
+                XMLSlideShow ppt = new XMLSlideShow(inputStream);
+
+                List<XSLFSlide> slides = ppt.getSlides();
+                List<String> verses = verseCreationXMLSlide(slides);
+
+                boolean lowerThird = lowerThirdCheckBox.isSelected();
+
+                if (lowerThird) {
+                    verseList = SlideGenerator.createSubtitles(verseList);
+                }
+
+                if (outputFolder.isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "The output file path is empty!");
+                    continue;
+                }
+
+                createSlideAndAddVersesAndSaveToDisk(outputFolder, verses, lowerThird, pptName);
+
+            }  catch (Exception e) {
+                System.err.println("BAD file "+pathToString);
+            }
+
+        }
+    }
+
+    private static List<String> verseCreationXMLSlide(List<XSLFSlide> slides) {
+        List<String> verses = new ArrayList<>();
+        slides.forEach(item -> {
+            if (item.getTitle() != null && !item.getTitle().isBlank()) {
+                verses.add(item.getTitle());
+            } else {
+                cleanTextXSSFSlide(item,verses);
+            }
+        });
+        return verses;
+    }
+
+    private void generateForFirstList(List<Path> fileNames, String outputFolder) {
         for (Path itemPath : fileNames) {
             InputStream inputStream = null;
             String pathToString = itemPath.toString();
@@ -647,62 +715,24 @@ public class GeneratorApp extends JFrame {
                         .replace("ppt", "pptx")
                         .replace("pps", "pptx");
 
-                //System.out.println(itemPath);
                 inputStream = new FileInputStream(itemPath.toFile());
                 HSLFSlideShow ppt = new HSLFSlideShow(inputStream);
 
-                List<HSLFSlide> slides = ppt.getSlides();
-                List<String> verses = new ArrayList<>();
-                slides.forEach(item -> {
-                    if (item.getTitle() != null && !item.getTitle().isBlank()) {
-                        verses.add(item.getTitle());
-                    } else {
-                        String updateText = item.getTextParagraphs().toString()
-                                .replace("[]", "")
-                                .replace("[[", "")
-                                .replace("]]", "")
-                                .replace("[","")
-                                .replace("]","")
-                                .replace(",", "")
-                                .trim();
-
-                        if(!updateText.isBlank())
-                            verses.add(updateText);
-                    }
-                });
+                List<String> verses = verseCreationHSLF(ppt);
 
                 boolean lowerThird = lowerThirdCheckBox.isSelected();
 
-                if (lowerThird)
+                if (lowerThird) {
                     verseList = SlideGenerator.createSubtitles(verseList);
+                }
 
-                SlideGenerator.createPpt();
-
-                Color slideBackgroundColor = backgroundColorDisplay.getBackground();
-                SlideGenerator.setBackground(slideBackgroundColor.getRed(), slideBackgroundColor.getGreen(), slideBackgroundColor.getBlue());
-
-                Color fontColor = fontColorDisplay.getBackground();
-                Color outlineColor = outlineColorDisplay.getBackground();
-                Color glowColor = glowColorDisplay.getBackground();
-                double fontSize = (double) fontSizeSpinner.getValue();
-                double outlineWidth = (double) outlineWidthSpinner.getValue();
-                double glowRadius = (double) glowRadiusSpinner.getValue();
-
-                if (outputFolder.length() == 0) {
+                if (outputFolder.isEmpty()) {
                     JOptionPane.showMessageDialog(null, "The output file path is empty!");
                     continue;
                 }
 
-                for (String verse : verses) {
-                    XSLFSlide slide = SlideGenerator.addSlide();
-                    XSLFTextRun textRun = SlideGenerator.addText(slide, verse, fontColor, fontSize, FONTNAME, FONTGROUP, lowerThird);
-                    SlideGenerator.addGlow(textRun, glowRadius, glowColor.getRed(), glowColor.getGreen(), glowColor.getBlue());
-                    SlideGenerator.addOutline(textRun, outlineWidth, outlineColor.getRed(), outlineColor.getGreen(), outlineColor.getBlue());
-                }
+                createSlideAndAddVersesAndSaveToDisk(outputFolder, verses, lowerThird, pptName);
 
-                SlideGenerator.addSlide();
-
-                SlideGenerator.savePpt(outputFolder + pptName);
             } catch (Exception e) {
                 System.out.println(pathToString);
                 e.printStackTrace();
@@ -711,15 +741,70 @@ public class GeneratorApp extends JFrame {
 
 
         }
+    }
 
+    private void createSlideAndAddVersesAndSaveToDisk(String outputFolder, List<String> verses, boolean lowerThird, String pptName) throws IOException {
+        SlideGenerator.createPpt();
 
-        JOptionPane.showMessageDialog(null, "Done folder conversion!");
-        Desktop desktop = Desktop.getDesktop();
-        try {
-            desktop.open(new File(outputFolder));
-        } catch (IOException e) {
-            e.printStackTrace();
+        Color slideBackgroundColor = backgroundColorDisplay.getBackground();
+        SlideGenerator.setBackground(slideBackgroundColor.getRed(), slideBackgroundColor.getGreen(), slideBackgroundColor.getBlue());
+
+        Color fontColor = fontColorDisplay.getBackground();
+        Color outlineColor = outlineColorDisplay.getBackground();
+        Color glowColor = glowColorDisplay.getBackground();
+        double fontSize = (double) fontSizeSpinner.getValue();
+        double outlineWidth = (double) outlineWidthSpinner.getValue();
+        double glowRadius = (double) glowRadiusSpinner.getValue();
+
+        for (String verse : verses) {
+            XSLFSlide slide = SlideGenerator.addSlide();
+            XSLFTextRun textRun = SlideGenerator.addText(slide, verse, fontColor, fontSize, FONTNAME, FONTGROUP, lowerThird);
+            SlideGenerator.addGlow(textRun, glowRadius, glowColor.getRed(), glowColor.getGreen(), glowColor.getBlue());
+            SlideGenerator.addOutline(textRun, outlineWidth, outlineColor.getRed(), outlineColor.getGreen(), outlineColor.getBlue());
         }
+
+        SlideGenerator.addSlide();
+
+        SlideGenerator.savePpt(outputFolder + pptName);
+    }
+
+    private static List<String> verseCreationHSLF(HSLFSlideShow ppt) {
+        List<HSLFSlide> slides = ppt.getSlides();
+        List<String> verses = new ArrayList<>();
+        slides.forEach(item -> {
+            if (item.getTitle() != null && !item.getTitle().isBlank()) {
+                verses.add(item.getTitle());
+            } else {
+                cleanTextHSLFSlide(item, verses);
+            }
+        });
+        return verses;
+    }
+
+    private static void cleanTextHSLFSlide(HSLFSlide item, List<String> verses) {
+        String updateText = item.getTextParagraphs().toString()
+                .replace("[]", "")
+                .replace("[[", "")
+                .replace("]]", "")
+                .replace("[","")
+                .replace("]","")
+                .replace(",", "")
+                .trim();
+
+        if(!updateText.isBlank())
+            verses.add(updateText);
+    }
+
+    private static void cleanTextXSSFSlide(XSLFSlide item,List<String> verses){
+
+        String updateText = "";
+        List<XSLFShape> shapes = item.getShapes();
+        XSLFSimpleShape thisSimpleShape =  (XSLFSimpleShape)shapes.get(0);
+        XSLFTextShape thisTextShape = (XSLFTextShape) thisSimpleShape;
+        updateText = thisTextShape.getText();
+
+        if(!updateText.isBlank())
+            verses.add(updateText);
     }
 
     public static void main(String[] args) {
