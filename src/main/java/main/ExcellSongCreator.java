@@ -9,31 +9,27 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
 
+import static main.SeleniumResurseCrestine.*;
+
 public class ExcellSongCreator {
 
+    public static final String NR_CANTARE = "Nr cantare";
+    public static final String TITLU_CANTARE = "Titlu cantare";
+    public static final String TEXT_CANTARE = "Text cantare";
+    public static final String TEXT_LINK = "Text link";
+    public static final String VIDEO_LINK = "Video Link";
+    public static final String MENTIUNE_1 = "Mentiune 1";
+    public static final String MENTIUNE_2 = "Mentiune 2";
+
     public static void main(String[] args) throws IOException {
+
+        initSelenium();
 
         String filePath ="C:\\Users\\Alex\\Downloads\\Sondaj cantari (răspunsuri).xlsx";
         FileInputStream fis = new FileInputStream(filePath);
         Workbook workbook = new XSSFWorkbook(fis);
 
         Sheet sheet = workbook.getSheetAt(0);
-
-        //int cellNr = 1;
-
-        List<ExcellSongCreator> list = new LinkedList<>();
-
-        Set<Integer> nameIndex = new LinkedHashSet<>();
-        nameIndex.add(1);
-        nameIndex.add(4);
-        nameIndex.add(7);
-        nameIndex.add(10);
-        nameIndex.add(13);
-        nameIndex.add(16);
-        nameIndex.add(19);
-        nameIndex.add(22);
-        nameIndex.add(25);
-        nameIndex.add(28);
 
         List<ElementExcellCantec> toateCantecele = new LinkedList<>();
         //1,4,7,10,13,16,19,22,25,28 - titlu
@@ -44,7 +40,6 @@ public class ExcellSongCreator {
 
         extractedCantece(sheet, toateCantecele);
 
-        String abcd = "";
         int size = toateCantecele.size();
         System.out.println(size);
 
@@ -57,14 +52,7 @@ public class ExcellSongCreator {
         Workbook workbookRez = new XSSFWorkbook();
         Sheet sheetRez = workbookRez.createSheet("Rezultate");
 
-        Row header = sheetRez.createRow(0);
-        header.createCell(0).setCellValue("Nr cantare");
-        header.createCell(1).setCellValue("Titlu cantare");
-        header.createCell(2).setCellValue("Text cantare");
-        header.createCell(3).setCellValue("Text link");
-        header.createCell(4).setCellValue("Video Link");
-        header.createCell(5).setCellValue("Mentiune 1");
-        header.createCell(6).setCellValue("Mentiune 2");
+        creazaAntet(sheetRez);
 
 
         int rowNum = 1;
@@ -80,18 +68,28 @@ public class ExcellSongCreator {
                 row.createCell(6).setCellValue(e.getMentiune());
             }
 
-
         }
         for(int i=0;i<7;i++){
             sheet.autoSizeColumn(i);
         }
 
-        try (FileOutputStream fos = new FileOutputStream("FormularCantec.xlsx")) {
+        try (FileOutputStream fos = new FileOutputStream("FormularCantec2.xlsx")) {
             workbookRez.write(fos);
             workbookRez.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void creazaAntet(Sheet sheetRez) {
+        Row header = sheetRez.createRow(0);
+        header.createCell(0).setCellValue(NR_CANTARE);
+        header.createCell(1).setCellValue(TITLU_CANTARE);
+        header.createCell(2).setCellValue(TEXT_CANTARE);
+        header.createCell(3).setCellValue(TEXT_LINK);
+        header.createCell(4).setCellValue(VIDEO_LINK);
+        header.createCell(5).setCellValue(MENTIUNE_1);
+        header.createCell(6).setCellValue(MENTIUNE_2);
     }
 
     private static void extractedCantece(Sheet sheet, List<ElementExcellCantec> toateCantecele) {
@@ -114,8 +112,18 @@ public class ExcellSongCreator {
                     if (cellText != null && cellText.getCellType() == CellType.STRING) {
                         String valoare = cellText.getStringCellValue();
 
-                        if (valoare.contains("http")) elementExcellCantec.setLinkVersuri(valoare);
-                        else elementExcellCantec.setVersuri(valoare);
+                        if (valoare.contains("http")) {
+                            elementExcellCantec.setLinkVersuri(valoare);
+                            if (valoare.contains("resursecrestine")&& valoare.contains("cantece")) {
+                                System.out.println(valoare);
+                                String rezultatResurse = getSongTextFromResurseCrestine(valoare);
+
+                                elementExcellCantec.setVersuri(rezultatResurse);
+                            }
+                        }
+                        else {
+                            elementExcellCantec.setVersuri(valoare);
+                        }
                     }
 
                     Cell cellVideo = row.getCell(cellNr + 2);
@@ -131,5 +139,7 @@ public class ExcellSongCreator {
             }
 
         }
+
+        closeSelenium();
     }
 }
