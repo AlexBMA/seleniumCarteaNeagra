@@ -82,7 +82,7 @@ public class GeneratorApp extends JFrame {
         jp1.setLayout(new BoxLayout(jp1, BoxLayout.PAGE_AXIS));
         setTitle("PowerPoint Generator App");
         setBounds(400, 200, 600, 600);
-        setResizable(false);
+        setResizable(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         jp1.add(initCautaInResurseRestineOptions());
