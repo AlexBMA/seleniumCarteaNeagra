@@ -2,6 +2,7 @@ package main;
 
 import clase.ElementExcellCantec;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileInputStream;
@@ -20,6 +21,12 @@ public class ExcellSongCreator {
     public static final String VIDEO_LINK = "Video Link";
     public static final String MENTIUNE_1 = "Mentiune 1";
     public static final String MENTIUNE_2 = "Mentiune 2";
+    public static final String CALIBRI = "Calibri";
+    public static final String CANTECE = "cantece";
+    public static final String ACORDURI = "acorduri";
+    public static final String RESURSECRESTINE = "resursecrestine";
+    public static final String HTTP = "http";
+    public static final String YOUTU = "youtu";
 
     public static void main(String[] args) throws IOException {
 
@@ -52,7 +59,9 @@ public class ExcellSongCreator {
         Workbook workbookRez = new XSSFWorkbook();
         Sheet sheetRez = workbookRez.createSheet("Rezultate");
 
-        creazaAntet(sheetRez);
+
+        CellStyle style = creazaStilAntet(workbookRez);
+        creazaAntet(sheetRez,style);
 
 
         int rowNum = 1;
@@ -69,11 +78,12 @@ public class ExcellSongCreator {
             }
 
         }
+
         for(int i=0;i<7;i++){
-            sheet.autoSizeColumn(i);
+            sheetRez.autoSizeColumn(i);
         }
 
-        try (FileOutputStream fos = new FileOutputStream("FormularCantec2.xlsx")) {
+        try (FileOutputStream fos = new FileOutputStream("FormularCantec9.xlsx")) {
             workbookRez.write(fos);
             workbookRez.close();
         } catch (IOException e) {
@@ -81,18 +91,47 @@ public class ExcellSongCreator {
         }
     }
 
-    private static void creazaAntet(Sheet sheetRez) {
-        Row header = sheetRez.createRow(0);
-        header.createCell(0).setCellValue(NR_CANTARE);
-        header.createCell(1).setCellValue(TITLU_CANTARE);
-        header.createCell(2).setCellValue(TEXT_CANTARE);
-        header.createCell(3).setCellValue(TEXT_LINK);
-        header.createCell(4).setCellValue(VIDEO_LINK);
-        header.createCell(5).setCellValue(MENTIUNE_1);
-        header.createCell(6).setCellValue(MENTIUNE_2);
+    private static CellStyle creazaStilAntet(Workbook workbookRez) {
+        Font font = workbookRez.createFont();
+        font.setBold(true);
+        font.setItalic(false);
+        font.setFontName(CALIBRI);
+        font.setColor(IndexedColors.BLACK.getIndex());
+        font.setFontHeightInPoints((short) 14);
+
+        CellStyle style = workbookRez.createCellStyle();
+        style.setFont(font);
+        return style;
     }
 
+    private static void creazaAntet(Sheet sheetRez, CellStyle cellStyle) {
+        Row header = sheetRez.createRow(0);
+        Cell c1 = header.createCell(0);
+        c1.setCellValue(NR_CANTARE);
+        c1.setCellStyle(cellStyle);
+        Cell c2 = header.createCell(1);
+        c2.setCellValue(TITLU_CANTARE);
+        c2.setCellStyle(cellStyle);
+        Cell c3 = header.createCell(2);
+        c3.setCellValue(TEXT_CANTARE);
+        c3.setCellStyle(cellStyle);
+        Cell c4 = header.createCell(3);
+        c4.setCellValue(TEXT_LINK);
+        c4.setCellStyle(cellStyle);
+        Cell c5 = header.createCell(4);
+        c5.setCellValue(VIDEO_LINK);
+        c5.setCellStyle(cellStyle);
+        Cell c6 = header.createCell(5);
+        c6.setCellValue(MENTIUNE_1);
+        c6.setCellStyle(cellStyle);
+        Cell c7 = header.createCell(6);
+        c7.setCellStyle(cellStyle);
+        c7.setCellValue(MENTIUNE_2);
+    }
+
+
     private static void extractedCantece(Sheet sheet, List<ElementExcellCantec> toateCantecele) {
+        Set<String> dublicat = new LinkedHashSet<>();
         for (int cellNr = 1; cellNr<=30; cellNr=cellNr+3){
             ElementExcellCantec elementExcellCantec = null;
 
@@ -104,21 +143,36 @@ public class ExcellSongCreator {
 
                     if (cellTitle != null && cellTitle.getCellType() == CellType.STRING) {
                         String valoare = cellTitle.getStringCellValue();
-                        elementExcellCantec.setTitlu(valoare);
+
+                        if(!dublicat.contains(valoare)){
+                            elementExcellCantec.setTitlu(valoare);
+                            dublicat.add(valoare);
+                        }else{
+                            System.out.println("dublicat");
+                        }
+
                     }
 
                     Cell cellText = row.getCell(cellNr + 1);
 
-                    if (cellText != null && cellText.getCellType() == CellType.STRING) {
+                    if (cellText != null && cellText.getCellType() == CellType.STRING && elementExcellCantec.getTitlu()!=null) {
                         String valoare = cellText.getStringCellValue();
 
-                        if (valoare.contains("http")) {
+                        if (valoare.contains(HTTP)) {
                             elementExcellCantec.setLinkVersuri(valoare);
-                            if (valoare.contains("resursecrestine")&& valoare.contains("cantece")) {
+                            if (valoare.contains(RESURSECRESTINE)&& valoare.contains(CANTECE)) {
                                 System.out.println(valoare);
                                 String rezultatResurse = getSongTextFromResurseCrestine(valoare);
-
                                 elementExcellCantec.setVersuri(rezultatResurse);
+                            }
+                            if(valoare.contains(RESURSECRESTINE)&& valoare.contains(ACORDURI)){
+                                System.out.println(valoare);
+                                String rezultatResurse = getSongTextFromAccordPage(valoare);
+                                elementExcellCantec.setVersuri(rezultatResurse);
+                            }
+                            if(valoare.contains(YOUTU)){
+                                System.out.println(valoare);
+                                elementExcellCantec.setLinkVideo(valoare);
                             }
                         }
                         else {
@@ -128,7 +182,7 @@ public class ExcellSongCreator {
 
                     Cell cellVideo = row.getCell(cellNr + 2);
 
-                    if (cellVideo != null && cellVideo.getCellType() == CellType.STRING) {
+                    if (cellVideo != null && cellVideo.getCellType() == CellType.STRING && elementExcellCantec.getTitlu()!=null) {
                         String valoare = cellVideo.getStringCellValue();
                         elementExcellCantec.setLinkVideo(valoare);
                     }

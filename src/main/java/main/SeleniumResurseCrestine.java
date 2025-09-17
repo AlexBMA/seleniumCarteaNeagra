@@ -56,4 +56,11 @@ public class SeleniumResurseCrestine {
         }
 
     }
+
+    public static  String getSongTextFromAccordPage(String link){
+        driver.get(link);
+        WebElement element = driver.findElement(By.className("stil-acorduri"));
+
+        return element.getText();
+    }
 }
