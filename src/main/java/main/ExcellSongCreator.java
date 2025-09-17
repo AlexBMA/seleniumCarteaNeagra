@@ -83,7 +83,7 @@ public class ExcellSongCreator {
             sheetRez.autoSizeColumn(i);
         }
 
-        try (FileOutputStream fos = new FileOutputStream("FormularCantec9.xlsx")) {
+        try (FileOutputStream fos = new FileOutputStream("FormularCantec11.xlsx")) {
             workbookRez.write(fos);
             workbookRez.close();
         } catch (IOException e) {
@@ -142,7 +142,7 @@ public class ExcellSongCreator {
                     Cell cellTitle = row.getCell(cellNr);
 
                     if (cellTitle != null && cellTitle.getCellType() == CellType.STRING) {
-                        String valoare = cellTitle.getStringCellValue();
+                        String valoare = cellTitle.getStringCellValue().toUpperCase();
 
                         if(!dublicat.contains(valoare)){
                             elementExcellCantec.setTitlu(valoare);
